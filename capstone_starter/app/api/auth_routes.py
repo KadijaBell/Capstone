@@ -54,7 +54,8 @@ def sign_up():
         user = User(
             username=form.data['username'],
             email=form.data['email'],
-            password=form.data['password']
+            password=form.data['password'],
+            role='client'
         )
         db.session.add(user)
         db.session.commit()
@@ -69,3 +70,11 @@ def unauthorized():
     Returns unauthorized JSON when flask-login authentication fails
     """
     return {'errors': {'message': 'Unauthorized'}}, 401
+
+@auth_routes.route('/current-user')
+@login_required
+def current_user_details():
+    """
+    Returns the details of the currently logged-in user.
+    """
+    return current_user.to_dict()
