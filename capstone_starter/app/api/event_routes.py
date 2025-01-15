@@ -29,7 +29,7 @@ def create_event():
     new_event = Event(
         title=data['title'],
         description=data['description'],
-        type=data.get('type', 'event'),  # Default type is 'event'
+        type=data.get('type', 'event'),  
         status='pending',
         client_id=current_user.id
     )
