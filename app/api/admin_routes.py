@@ -30,7 +30,6 @@ def contact_client():
     # Simulate contact logic (e.g., send email or message)
     client_id = data.get('client_id')
     message = data.get('message')
-    # Replace this logic with actual messaging or email functionality
     return {'status': f'Message sent to client {client_id}: {message}'}
 
 
@@ -64,5 +63,3 @@ def delete_event(id):
     db.session.delete(event)
     db.session.commit()
     return jsonify({'message': 'Event deleted successfully'})
-
-
