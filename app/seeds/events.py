@@ -66,6 +66,15 @@ def seed_events():
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow()
     )
+    event4 = Event(
+        title=" Awareness Campaign",
+        description="A campaign to promote  practices.",
+        type="cause",
+        status="resolved",
+        client_id=4,
+        service_id=3,
+        agency_id=3
+    )
 
     db.session.add(event1)
     db.session.add(event2)

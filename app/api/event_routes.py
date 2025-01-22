@@ -131,36 +131,22 @@ def create_event_request():
     """
     Create a new event request from non-authenticated users
     """
+    if current_user.role != 'user':
+        return {'error': 'Unauthorized'}, 403
+
     data = request.get_json()
+    new_event = Event(
+        title=data['title'],
+        description=data['description'],
+        type=data.get('type', 'event'),
+        status='pending',
+        client_id=current_user.id
+    )
+    db.session.add(new_event)
+    db.session.commit()
+    return jsonify(new_event.to_dict()), 201
 
-    try:
-        new_event = Event(
-            title=data.get('title'),
-            description=data.get('description'),
-            type=data.get('serviceType'),
-            status='pending',
-            organization=data.get('organization'),
-            location=data.get('location'),
-        )
-
-        db.session.add(new_event)
-        db.session.commit()
-
-        return jsonify({
-            'success': True,
-            'message': 'Event request submitted successfully'
-        }), 201
-
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 400
-
-
-#PUT
-@event_routes.route('/<int:id>', methods=['PUT'])
+@event_routes.route('/events/<int:id>', methods=['PATCH'])
 @login_required
 def update_event(id):
     event = Event.query.get_or_404(id)
