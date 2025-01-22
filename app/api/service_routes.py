@@ -3,7 +3,7 @@ from app.models import Service
 
 service_routes = Blueprint('services', __name__)
 
-@service_routes.route('/services', methods=['GET'])
+@service_routes.route('/', methods=['GET'])
 def get_services():
     """
     Retrieve all services.

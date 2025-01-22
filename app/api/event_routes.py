@@ -1,35 +1,36 @@
 from flask import Blueprint, request, jsonify
-from app.models import  Event, db
+from app.models import  Event,User,Service,Agency, db
 from flask_login import current_user, login_required
 
 event_routes = Blueprint('events', __name__)
 
-@event_routes.route('/events', methods=['GET'])
-def get_events():
-    """
-    Retrieve all events or filter by type and status.
-    """
-    event_type = request.args.get('type')
-    status = request.args.get('status')
-    query = Event.query
-    if event_type:
-        query = query.filter(Event.type == event_type)
-    if status:
-        query = query.filter(Event.status == status)
-    events = query.all()
-    return jsonify([event.to_dict() for event in events])
+#GET
+@event_routes.route('/', methods=['GET'])
+def list_events():
+    try:
 
-@event_routes.route('/events', methods=['POST'])
+        events = Event.query.all()
+        return {'events': [event.to_dict() for event in events]}, 200
+    except Exception as e:
+        print(f"Error fetching events: {str(e)}")
+        return jsonify({"error": "Unable to list events"}), 500
+
+
+#POST
+@event_routes.route('/', methods=['POST'])
 @login_required
 def create_event():
     """
     Create a new event request.
     """
+    if current_user.role != 'user':
+        return {'error': 'Unauthorized'}, 403
+
     data = request.get_json()
     new_event = Event(
         title=data['title'],
         description=data['description'],
-        type=data.get('type', 'event'),  
+        type=data.get('type', 'event'),
         status='pending',
         client_id=current_user.id
     )
@@ -37,7 +38,9 @@ def create_event():
     db.session.commit()
     return jsonify(new_event.to_dict()), 201
 
-@event_routes.route('/events/<int:id>', methods=['PATCH'])
+
+#PUT
+@event_routes.route('/<int:id>', methods=['PUT'])
 @login_required
 def update_event_status(id):
     """
@@ -53,7 +56,9 @@ def update_event_status(id):
         db.session.commit()
     return jsonify(event.to_dict())
 
-@event_routes.route('/events/<int:id>', methods=['DELETE'])
+
+#DELETE
+@event_routes.route('/<int:id>', methods=['DELETE'])
 @login_required
 def delete_event(id):
     """

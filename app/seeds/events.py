@@ -30,10 +30,20 @@ def seed_events():
         service_id=3,
         agency_id=3
     )
+    event4 = Event(
+        title=" Awareness Campaign",
+        description="A campaign to promote  practices.",
+        type="cause",
+        status="resolved",
+        client_id=4,
+        service_id=3,
+        agency_id=3
+    )
 
     db.session.add(event1)
     db.session.add(event2)
     db.session.add(event3)
+    db.session.add(event4)
     db.session.commit()
 
 
