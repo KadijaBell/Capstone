@@ -8,6 +8,7 @@ from datetime import datetime
 admin_routes = Blueprint('admin', __name__)
 
 #GET
+
 @admin_routes.route('/events', methods=['GET'])
 @login_required
 def get_admin_events():
