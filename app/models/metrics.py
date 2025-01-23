@@ -3,7 +3,8 @@ from datetime import datetime
 
 class Metric(db.Model):
     __tablename__ = 'metrics'
-    if environment == "production": __table_args__ = {'schema': SCHEMA}
+    if environment == "production":
+        __table_args__ = {'schema': SCHEMA}
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     metric_name = db.Column(db.String, nullable=False)

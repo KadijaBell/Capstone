@@ -2,9 +2,12 @@ from flask import Blueprint, jsonify, request
 from app.models import Event, db
 from flask_login import current_user, login_required
 
+
 admin_routes = Blueprint('admin', __name__)
 
-@admin_routes.route('/admin/events', methods=['GET'])
+#GET
+
+@admin_routes.route('/events', methods=['GET'])
 @login_required
 def get_admin_events():
     """
@@ -13,11 +16,18 @@ def get_admin_events():
     if current_user.role != 'admin':
         return {'error': 'Unauthorized'}, 403
 
-    events = Event.query.all()
-    return jsonify([event.to_dict() for event in events])
+    status = request.args.get('status')
+    events_query = Event.query
 
+    if status:
+        events = events_query.filter(Event.status == status)
 
-@admin_routes.route('/admin/contact', methods=['POST'])
+    else:
+        events = events_query.all()
+    return {'events': [event.to_dict() for event in events]}
+
+#POST
+@admin_routes.route('/contact', methods=['POST'])
 @login_required
 def contact_client():
     """
@@ -32,8 +42,8 @@ def contact_client():
     message = data.get('message')
     return {'status': f'Message sent to client {client_id}: {message}'}
 
-
-@admin_routes.route('/admin/events/<int:id>', methods=['PATCH'])
+#PUT
+@admin_routes.route('/events/<int:id>', methods=['PUT'])
 @login_required
 def update_event(id):
     """
@@ -49,8 +59,8 @@ def update_event(id):
         db.session.commit()
     return jsonify(event.to_dict())
 
-
-@admin_routes.route('/admin/events/<int:id>', methods=['DELETE'])
+#DELETE
+@admin_routes.route('/events/<int:id>', methods=['DELETE'])
 @login_required
 def delete_event(id):
     """
