@@ -12,9 +12,10 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(40), nullable=False, unique=True)
     email = db.Column(db.String(255), nullable=False, unique=True)
     hashed_password = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.Enum('admin', 'user'), nullable=False, default='user')
+    role = db.Column(db.Enum('admin', 'user'),name='user_role', nullable=False, default='user')
 
     agency = db.relationship("Agency", back_populates="user", uselist=False)
+    events = db.relationship("Event", back_populates="client", cascade="all, delete-orphan")
 
     @property
     def password(self):
