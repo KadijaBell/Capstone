@@ -2,10 +2,11 @@ from flask import Blueprint, jsonify, request
 from app.models import Event, db
 from flask_login import current_user, login_required
 
+
 admin_routes = Blueprint('admin', __name__)
 
-
 #GET
+
 @admin_routes.route('/events', methods=['GET'])
 @login_required
 def get_admin_events():
@@ -15,8 +16,15 @@ def get_admin_events():
     if current_user.role != 'admin':
         return {'error': 'Unauthorized'}, 403
 
-    events = Event.query.all()
-    return jsonify([event.to_dict() for event in events])
+    status = request.args.get('status')
+    events_query = Event.query
+
+    if status:
+        events = events_query.filter(Event.status == status)
+
+    else:
+        events = events_query.all()
+    return {'events': [event.to_dict() for event in events]}
 
 #POST
 @admin_routes.route('/contact', methods=['POST'])

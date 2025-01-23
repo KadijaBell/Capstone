@@ -9,4 +9,4 @@ def get_services():
     Retrieve all services.
     """
     services = Service.query.all()
-    return jsonify([service.to_dict() for service in services])
+    return jsonify([service.to_dict() for service in services]),200

@@ -6,15 +6,40 @@ event_routes = Blueprint('events', __name__)
 
 #GET
 @event_routes.route('/', methods=['GET'])
+@login_required
 def list_events():
     try:
+        import logging
+        logging.info(f"Current User: {current_user.__dict__}")
 
-        events = Event.query.all()
+        # Check if role exists
+        if not hasattr(current_user, 'role') or not current_user.role:
+            return jsonify({"error": "User role not set. Please check user data."}), 400
+
+        # Logic for admin and user
+        if current_user.role == 'admin':
+            events = Event.query.all()
+        elif current_user.role == 'user':
+            events = Event.query.filter_by(client_id=current_user.id).all()
+        else:
+            return jsonify({"error": "Invalid user role"}), 403
+
         return {'events': [event.to_dict() for event in events]}, 200
-    except Exception as e:
-        print(f"Error fetching events: {str(e)}")
-        return jsonify({"error": "Unable to list events"}), 500
 
+    except Exception as error:
+        logging.error(f"Error fetching events: {error}")
+        return jsonify({"error": f"Unable to fetch events: {str(error)}"}), 500
+pass
+
+@event_routes.route('/my-events', methods=['GET'])
+@login_required
+def get_user_events():
+
+    if current_user.role != 'user':
+        return {'error': 'Unauthorized'}, 403
+
+    user_events = Event.query.filter_by(client_id=current_user.id).all()
+    return {'events': [event.to_dict() for event in user_events]}
 
 #POST
 @event_routes.route('/', methods=['POST'])
@@ -37,33 +62,43 @@ def create_event():
     db.session.add(new_event)
     db.session.commit()
     return jsonify(new_event.to_dict()), 201
-
+pass
 
 #PUT
 @event_routes.route('/<int:id>', methods=['PUT'])
 @login_required
-def update_event_status(id):
-    """
-    Update the status of an event (admin-only).
-    """
-    if current_user.role != 'admin':
-        return {'error': 'Unauthorized'}, 403
-
+def update_event(id):
     event = Event.query.get_or_404(id)
-    data = request.get_json()
-    if 'status' in data:
-        event.status = data['status']
-        db.session.commit()
-    return jsonify(event.to_dict())
+    # Check
+    if event.client_id != current_user.id and current_user.role != 'admin':
+        return jsonify({'error': 'Unauthorized access to update this event'}), 403
+    try:
+        data = request.get_json()
 
+        # Set editing restrictions
+        if current_user.role != 'admin':
+            allowed_fields = ['title', 'description']
+            for field in allowed_fields:
+                if field in data:
+                    setattr(event, field, data[field])
+        else:
+            # Admin can update any field
+            for key, value in data.items():
+                setattr(event, key, value)
+
+        db.session.commit()
+        return event.to_dict(), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Unable to update event', 'details': str(e)}), 500
+
+pass
 
 #DELETE
 @event_routes.route('/<int:id>', methods=['DELETE'])
 @login_required
 def delete_event(id):
-    """
-    Delete an event (admin-only).
-    """
+
     if current_user.role != 'admin':
         return {'error': 'Unauthorized'}, 403
 
@@ -71,3 +106,41 @@ def delete_event(id):
     db.session.delete(event)
     db.session.commit()
     return jsonify({'message': 'Event deleted successfully'})
+pass
+
+#Dashboard
+@event_routes.route('/dashboard', methods=['GET'])
+@login_required
+def dashboard():
+    """
+    Dashboard route for both users and admins.
+    - Regular users (clients) see only their events.
+    - Admins see all events and statistics.
+    """
+    if current_user.role == 'admin':
+        # Admin
+        total_events = Event.query.count()
+        pending_events = Event.query.filter_by(status='pending').count()
+        users_count = User.query.count()
+        total_services = Service.query.count()
+        events = Event.query.all()
+
+        return {
+            "role": "admin",
+            "dashboard_data": {
+                "total_events": total_events,
+                "pending_events": pending_events,
+                "users_count": users_count,
+                "total_services": total_services,
+            },
+            "events": [event.to_dict() for event in events],
+        }
+    elif current_user.role == 'user':
+        # User
+        user_events = Event.query.filter_by(client_id=current_user.id).all()
+        return {
+            "role": "user",
+            "events": [event.to_dict() for event in user_events],
+        }
+    else:
+        return {"error": "Unauthorized"}, 403

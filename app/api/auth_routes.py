@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import Blueprint, request,jsonify
 from app.models import User, db
 from app.forms import LoginForm
 from app.forms import SignUpForm
@@ -50,18 +50,23 @@ def sign_up():
     """
     form = SignUpForm()
     form['csrf_token'].data = request.cookies['csrf_token']
-    if form.validate_on_submit():
-        user = User(
-            username=form.data['username'],
-            email=form.data['email'],
-            password=form.data['password'],
-            role=form.data['role']
-        )
-        db.session.add(user)
-        db.session.commit()
-        login_user(user)
-        return user.to_dict()
-    return form.errors, 401
+    try:
+        if form.validate_on_submit():
+            role = form.data.get('role', 'user')
+            user = User(
+                username=form.data['username'],
+                email=form.data['email'],
+                password=form.data['password'],
+                role=role
+            )
+            db.session.add(user)
+            db.session.commit()
+            login_user(user)
+            return user.to_dict()
+        return form.errors, 401
+    except Exception as error:
+        return {'error': str(error)}, 500
+
 
 
 @auth_routes.route('/unauthorized')
@@ -71,10 +76,10 @@ def unauthorized():
     """
     return {'errors': {'message': 'Unauthorized'}}, 401
 
-@auth_routes.route('/current-user')
+@auth_routes.route('/current-user', methods=['GET'])
 @login_required
 def current_user_details():
     """
     Returns the details of the currently logged-in user.
     """
-    return current_user.to_dict()
+    return jsonify(current_user.to_dict())
