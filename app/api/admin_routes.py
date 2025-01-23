@@ -5,8 +5,8 @@ from flask_login import current_user, login_required
 
 admin_routes = Blueprint('admin', __name__)
 
-
 #GET
+
 @admin_routes.route('/events', methods=['GET'])
 @login_required
 def get_admin_events():
