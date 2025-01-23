@@ -111,31 +111,16 @@ pass
 #Dashboard
 @event_routes.route('/dashboard', methods=['GET'])
 @login_required
-def dashboard():
+def user_dashboard():
     """
     Dashboard route for both users and admins.
     - Regular users (clients) see only their events.
     - Admins see all events and statistics.
     """
-    if current_user.role == 'admin':
-        # Admin
-        total_events = Event.query.count()
-        pending_events = Event.query.filter_by(status='pending').count()
-        users_count = User.query.count()
-        total_services = Service.query.count()
-        events = Event.query.all()
+    if current_user.role != 'user':
+        return jsonify({'error': 'Unauthorized access'}), 403
 
-        return {
-            "role": "admin",
-            "dashboard_data": {
-                "total_events": total_events,
-                "pending_events": pending_events,
-                "users_count": users_count,
-                "total_services": total_services,
-            },
-            "events": [event.to_dict() for event in events],
-        }
-    elif current_user.role == 'user':
+    if current_user.role == 'user':
         # User
         user_events = Event.query.filter_by(client_id=current_user.id).all()
         return {

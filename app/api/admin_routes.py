@@ -1,12 +1,11 @@
 from flask import Blueprint, jsonify, request
-from app.models import Event, db
+from app.models import Event, User, Service, Agency, db
 from flask_login import current_user, login_required
 
 
 admin_routes = Blueprint('admin', __name__)
 
 #GET
-
 @admin_routes.route('/events', methods=['GET'])
 @login_required
 def get_admin_events():
@@ -73,3 +72,35 @@ def delete_event(id):
     db.session.delete(event)
     db.session.commit()
     return jsonify({'message': 'Event deleted successfully'})
+
+
+#Dashboard
+@admin_routes.route('/dashboard', methods=['GET'])
+@login_required
+def admin_dashboard():
+    """
+    Dashboard route for both users and admins.
+    - Regular users (clients) see only their events.
+    - Admins see all events and statistics.
+    """
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Unauthorized access'}), 403
+
+    if current_user.role == 'admin':
+        # Admin
+        total_events = Event.query.count()
+        pending_events = Event.query.filter_by(status='pending').count()
+        users_count = User.query.count()
+        total_services = Service.query.count()
+        events = Event.query.all()
+
+        return {
+            "role": "admin",
+            "dashboard_data": {
+                "total_events": total_events,
+                "pending_events": pending_events,
+                "users_count": users_count,
+                "total_services": total_services,
+            },
+            "events": [event.to_dict() for event in events],
+        }

@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { motion } from "framer-motion";
 import ProfileButton from "./ProfileButton";
 import OpenModalButton from "../OpenModalButton"; // This component triggers the modal
 import LoginFormModal from "../LoginFormModal";
