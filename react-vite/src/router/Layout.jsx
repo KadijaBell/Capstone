@@ -8,6 +8,7 @@ import Navigation from "../components/Navigation/Navigation";
 export default function Layout() {
   const dispatch = useDispatch();
   const [isLoaded, setIsLoaded] = useState(false);
+
   useEffect(() => {
     dispatch(thunkAuthenticate()).then(() => setIsLoaded(true));
   }, [dispatch]);
@@ -15,8 +16,11 @@ export default function Layout() {
   return (
     <>
       <ModalProvider>
+        {/* Enhanced Navigation */}
         <Navigation />
+        {/* Conditionally render the content */}
         {isLoaded && <Outlet />}
+        {/* Modal rendered for the entire app */}
         <Modal />
       </ModalProvider>
     </>
