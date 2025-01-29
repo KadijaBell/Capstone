@@ -3,7 +3,7 @@ import { thunkSignup } from "../../redux/session";
 import { useDispatch } from "react-redux";
 import { useModal } from "../../context/Modal";
 
-function SignupFormModal() {
+function SignupFormModal({isPage = false}) {
   const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -32,7 +32,7 @@ function SignupFormModal() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-      const isPasswordValid = Object.values(passwordRequirements).every(req => req);
+    const isPasswordValid = Object.values(passwordRequirements).every(req => req);
 
     if (!isPasswordValid) {
       return setErrors({
@@ -48,7 +48,6 @@ function SignupFormModal() {
       return;
     }
 
-
     const serverResponse = await dispatch(
       thunkSignup({ email, username, password })
     );
@@ -56,7 +55,7 @@ function SignupFormModal() {
     if (serverResponse) {
       setErrors(serverResponse);
     } else {
-      closeModal();
+      if (!isPage) closeModal();
       navigate("/dashboard");
     }
   };
@@ -174,9 +173,8 @@ function SignupFormModal() {
           Sign Up
         </button>
       </form>
-    </div>
+    </>
   );
 }
-
 
 export default SignupFormModal;
