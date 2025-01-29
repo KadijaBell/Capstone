@@ -41,7 +41,9 @@ function SignupFormPage() {
   };
 
   return (
-    <>
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="relative bg-white p-8 rounded-lg shadow-lg z-50">
+
       <h1>Sign Up</h1>
       {errors.server && <p>{errors.server}</p>}
       <form onSubmit={handleSubmit}>
@@ -87,7 +89,8 @@ function SignupFormPage() {
         {errors.confirmPassword && <p>{errors.confirmPassword}</p>}
         <button type="submit">Sign Up</button>
       </form>
-    </>
+    </div>
+  </div>
   );
 }
 

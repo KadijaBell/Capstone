@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from flask_login import login_required
 from app.models import User
 
@@ -23,3 +23,25 @@ def user(id):
     """
     user = User.query.get(id)
     return user.to_dict()
+
+@user_routes.route('/:id/events', methods=['GET'])
+@login_required
+def get_user_events(id):
+    user = User.query.get(id)
+    return {'events': [event.to_dict() for event in user.events]}
+
+
+@user_routes.route('/contact-admin', methods=['POST'])
+@login_required
+def contact_admin():
+    """
+    Send a message to admin regarding an event
+    """
+    data = request.json
+    event_id = data.get('event_id')
+    message = data.get('message')
+
+    return jsonify({
+        "message": "Message sent successfully",
+        "status": "success"
+    })

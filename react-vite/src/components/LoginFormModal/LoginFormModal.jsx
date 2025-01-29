@@ -1,25 +1,94 @@
-import { useState } from "react";
+// import { useState } from "react";
+// import { thunkLogin } from "../../redux/session";
+// import { useDispatch } from "react-redux";
+// import { useModal } from "../../context/Modal";
+// import "./LoginForm.css";
+
+// function LoginFormModal() {
+//   const dispatch = useDispatch();
+//   const [formData, setFormData] = useState({
+//     user: "",
+//     password: "",
+//   })
+//   const [errors, setErrors] = useState([]);
+//   const { closeModal } = useModal();
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setErrors([]);
+
+//     const serverResponse = await dispatch(
+//       thunkLogin(formData));
+//     if (serverResponse) {
+//       setErrors(serverResponse.errors);
+//     } else {
+//       closeModal();
+//     }
+//   };
+
+//     const handleChange = (error) => {
+//       setFormData({ ...formData, [error.target.name]: error.target.value });
+//     }
+//   return (
+//     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center">
+//     <div className="relative bg-white rounded-lg shadow-lg p-6 z-60">
+
+//       <h1>Log In</h1>
+//       <form onSubmit={handleSubmit}>
+//         <label>
+//           Email or Username
+//           <input
+//             type="text"
+//             value={identity}
+//             onChange={(e) => setIdentity(e.target.value)}
+//             required
+//           />
+//         </label>
+//         {errors.identity && <p>{errors.identity}</p>}
+//         <label>
+//           Password
+//           <input
+//             type="password"
+//             value={password}
+//             onChange={(e) => setPassword(e.target.value)}
+//             required
+//           />
+//         </label>
+//         {errors.password && <p>{errors.password}</p>}
+//         <button type="submit">Log In</button>
+//       </form>
+//     </div>
+//   </div>
+//   );
+// }
+
+// export default LoginFormModal;
+import  { useState } from "react";
+import { useDispatch } from "react-redux";
 import { thunkLogin } from "../../redux/session";
 import { useDispatch } from "react-redux";
 import { useModal } from "../../context/Modal";
 
-function LoginFormModal() {
+function LoginFormModal({ onClose }) {
   const dispatch = useDispatch();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState({});
-  const { closeModal } = useModal();
+  const [formData, setFormData] = useState({ user: "", password: "" });
+  const [errors, setErrors] = useState([]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrors([]);
 
     const serverResponse = await dispatch(thunkLogin({ email, password }));
 
     if (serverResponse) {
       setErrors(serverResponse);
     } else {
-      closeModal();
+      onClose();
     }
+  };
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   return (

@@ -1,39 +1,16 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
-// import { motion } from "framer-motion";
 
-
+import AdminDashboard from "../../components/AdminDashboard/AdminDashboard";
 
 function AdminDashboardPage() {
-    const [requests, setRequests] = useState([]);
-
-    useEffect(() => {
-      async function fetchRequests() {
-        try {
-          const response = await axios.get("/api/admin/events");
-          setRequests(response.data.events);
-        } catch (error) {
-          console.error("Error fetching requests:", error);
-        }
-      }
-
-      fetchRequests();
-    }, []);
 
     return (
       <div>
-        <h2>Admin Dashboard</h2>
-        <ul>
-          {requests.map((req) => (
-            <li key={req.id}>
-              <h3>{req.title}</h3>
-              <p>{req.description}</p>
-              <button>Approve</button>
-              <button>Deny</button>
-            </li>
-          ))}
-        </ul>
+        <h1>Admin Dashboard</h1>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <AdminDashboard />
+        </div>
       </div>
     );
   }
-export default AdminDashboardPage
+export default AdminDashboardPage;
+

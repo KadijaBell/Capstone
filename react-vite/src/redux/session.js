@@ -11,7 +11,7 @@ const removeUser = () => ({
 });
 
 export const thunkAuthenticate = () => async (dispatch) => {
-	const response = await fetch("/api/auth/");
+	const response = await fetch("/api/auth/" );
 	if (response.ok) {
 		const data = await response.json();
 		if (data.errors) {
@@ -22,21 +22,45 @@ export const thunkAuthenticate = () => async (dispatch) => {
 	}
 };
 
-export const thunkLogin = (credentials) => async dispatch => {
-  const response = await fetch("/api/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(credentials)
-  });
+// export const thunkLogin = (credentials) => async (dispatch) => {
+//   try {
+//     const response = await fetch("/api/auth/login", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify(credentials),
+//     });
 
-  if(response.ok) {
-    const data = await response.json();
-    dispatch(setUser(data));
-  } else if (response.status < 500) {
-    const errorMessages = await response.json();
-    return errorMessages
-  } else {
-    return { server: "Something went wrong. Please try again" }
+//     if (!response.ok) {
+//       const data = await response.json();
+//       if (data.errors) throw data.errors;
+//     }
+
+//     const user = await response.json();
+//     dispatch(setUser(user));
+//     return null;
+//   } catch (errors) {
+//     return errors;
+//   }
+// };
+
+export const thunkLogin = (credentials) => async (dispatch) => {
+  try {
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(credentials),
+    });
+
+    if (!response.ok) {
+      const errors = await response.json();
+      throw errors;
+    }
+
+    const user = await response.json();
+    dispatch(setUser(user));
+    return null;
+  } catch (errors) {
+    return errors; 
   }
 };
 
@@ -75,5 +99,8 @@ function sessionReducer(state = initialState, action) {
       return state;
   }
 }
+
+
+
 
 export default sessionReducer;

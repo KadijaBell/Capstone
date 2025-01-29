@@ -11,9 +11,34 @@ function SignupFormModal() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState({});
   const { closeModal } = useModal();
+  const navigate = useNavigate();
+
+  const [passwordRequirements, setPasswordRequirements] = useState({
+    hasUpperCase: false,
+    hasNumber: false,
+    hasSpecialChar: false,
+    hasMinLength: false
+  });
+
+  useEffect(() => {
+    setPasswordRequirements({
+      hasUpperCase: /[A-Z]/.test(password),
+      hasNumber: /[0-9]/.test(password),
+      hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+      hasMinLength: password.length >= 8
+    });
+  }, [password]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+      const isPasswordValid = Object.values(passwordRequirements).every(req => req);
+
+    if (!isPasswordValid) {
+      return setErrors({
+        password: "Please meet all password requirements"
+      });
+    }
 
     if (password !== confirmPassword) {
       setErrors({
@@ -23,6 +48,7 @@ function SignupFormModal() {
       return;
     }
 
+
     const serverResponse = await dispatch(
       thunkSignup({ email, username, password })
     );
@@ -31,6 +57,7 @@ function SignupFormModal() {
       setErrors(serverResponse);
     } else {
       closeModal();
+      navigate("/dashboard");
     }
   };
 
@@ -50,7 +77,8 @@ function SignupFormModal() {
             Email
           </label>
           <input
-            type="text"
+            type="email"
+            placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -74,6 +102,7 @@ function SignupFormModal() {
           </label>
           <input
             type="text"
+            placeholder="Username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
@@ -120,6 +149,7 @@ function SignupFormModal() {
           </label>
           <input
             type="password"
+            placeholder="Confirm Password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
@@ -147,5 +177,6 @@ function SignupFormModal() {
     </div>
   );
 }
+
 
 export default SignupFormModal;

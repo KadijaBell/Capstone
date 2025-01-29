@@ -38,6 +38,7 @@ app.register_blueprint(admin_routes, url_prefix='/api/admin')
 app.register_blueprint(service_routes, url_prefix='/api/services')
 app.register_blueprint(metric_routes, url_prefix='/api/metrics')
 app.register_blueprint(agency_routes, url_prefix='/api/agencies')
+
 db.init_app(app)
 Migrate(app, db)
 

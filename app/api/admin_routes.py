@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.models import Event, User, Service, Agency, db
+from app.models import Event, User, Service, Agency,Metric, db
 from flask_login import current_user, login_required
 
 
@@ -89,12 +89,13 @@ def admin_dashboard():
     if current_user.role == 'admin':
         # Admin
         total_events = Event.query.count()
-        pending_events = Event.query.filter_by(status='pending').count()
+        pending_events = Event.query.filter(Event.status == 'pending').count()
         users_count = User.query.count()
         total_services = Service.query.count()
         events = Event.query.all()
+        pending_events_list = Event.query.filter(Event.status == 'pending').all()
 
-        return {
+    return {
             "role": "admin",
             "dashboard_data": {
                 "total_events": total_events,
@@ -102,5 +103,39 @@ def admin_dashboard():
                 "users_count": users_count,
                 "total_services": total_services,
             },
+            "pending_events": [event.to_dict() for event in pending_events_list],
             "events": [event.to_dict() for event in events],
         }
+@admin_routes.route('/events/<int:event_id>/approve', methods=['PATCH'])
+@login_required
+def approve_event(event_id):
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Unauthorized access'}), 403
+    event = Event.query.get(event_id)
+    if not event:
+        return jsonify({'error': 'Event not found'}), 404
+    event.status = 'approved'
+    db.session.commit()
+    return event.to_dict()
+
+@admin_routes.route('/events/<int:event_id>/reject', methods=['PATCH'])
+@login_required
+def reject_event(event_id):
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Unauthorized access'}), 403
+    event = Event.query.get(event_id)
+    if not event:
+        return jsonify({'error': 'Event not found'}), 404
+    event.status = 'inactive'
+    db.session.commit()
+    return event.to_dict()
+
+
+@admin_routes.route('/metrics', methods=['GET'])
+@login_required
+def get_metrics():
+    """
+    Retrieve all metrics.
+    """
+    metrics = Metric.query.all()
+    return jsonify([metric.to_dict() for metric in metrics]),200

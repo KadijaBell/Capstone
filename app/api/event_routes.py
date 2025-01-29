@@ -29,7 +29,12 @@ def list_events():
     except Exception as error:
         logging.error(f"Error fetching events: {error}")
         return jsonify({"error": f"Unable to fetch events: {str(error)}"}), 500
-pass
+
+@event_routes.route('/approved', methods=['GET'])
+@login_required
+def get_approved_events():
+    approved_events = Event.query.filter_by(status='approved').all()
+    return {'events': [event.to_dict() for event in approved_events]}
 
 @event_routes.route('/my-events', methods=['GET'])
 @login_required
@@ -62,7 +67,6 @@ def create_event():
     db.session.add(new_event)
     db.session.commit()
     return jsonify(new_event.to_dict()), 201
-pass
 
 #PUT
 @event_routes.route('/<int:id>', methods=['PUT'])
@@ -92,8 +96,6 @@ def update_event(id):
         db.session.rollback()
         return jsonify({'error': 'Unable to update event', 'details': str(e)}), 500
 
-pass
-
 #DELETE
 @event_routes.route('/<int:id>', methods=['DELETE'])
 @login_required
@@ -106,26 +108,38 @@ def delete_event(id):
     db.session.delete(event)
     db.session.commit()
     return jsonify({'message': 'Event deleted successfully'})
-pass
 
 #Dashboard
 @event_routes.route('/dashboard', methods=['GET'])
 @login_required
 def user_dashboard():
     """
-    Dashboard route for both users and admins.
-    - Regular users (clients) see only their events.
-    - Admins see all events and statistics.
+    Dashboard route for users to see their events and metrics
     """
-    if current_user.role != 'user':
-        return jsonify({'error': 'Unauthorized access'}), 403
+    try:
+        if current_user.role != 'user':
+            return jsonify({'error': 'Unauthorized access'}), 403
 
-    if current_user.role == 'user':
-        # User
+        # Get user's events
         user_events = Event.query.filter_by(client_id=current_user.id).all()
-        return {
+
+        # Calculate metrics
+        total_events = len(user_events)
+        pending_events = sum(1 for event in user_events if event.status == 'pending')
+        approved_events = sum(1 for event in user_events if event.status == 'approved')
+        rejected_events = sum(1 for event in user_events if event.status == 'rejected')
+
+        return jsonify({
             "role": "user",
-            "events": [event.to_dict() for event in user_events],
-        }
-    else:
-        return {"error": "Unauthorized"}, 403
+            "dashboard_data": {
+                "total_events": total_events,
+                "pending_events": pending_events,
+                "approved_events": approved_events,
+                "rejected_events": rejected_events,
+            },
+            "events": [event.to_dict() for event in user_events]
+        }), 200
+
+    except Exception as e:
+        print(f"Dashboard error: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500

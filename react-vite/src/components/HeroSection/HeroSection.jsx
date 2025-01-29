@@ -14,7 +14,25 @@ const images = [
   "/assets/capstone-image-8.jpg",
 ];
 
-const HeroSection = () => {
+function HeroSection({ title, subtitle, primaryButtonText, primaryButtonLink, primaryButtonComponent, secondaryButtonText, secondaryButtonLink }) {
+  const heroVariants = {
+    hidden: { opacity: 0, y: -50 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 1 },
+    },
+  };
+
+  const textVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { delay: 0.2, duration: 0.7 },
+    },
+  };
+
   return (
     <main className="w-full">
       <section className="relative pt-10 xl:pt-14 bg-midnight text-ivory">
@@ -90,6 +108,6 @@ const HeroSection = () => {
       </section>
     </main>
   );
-};
+}
 
 export default HeroSection;
