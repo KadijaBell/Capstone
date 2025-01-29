@@ -16,11 +16,9 @@ export default function Layout() {
   return (
     <>
       <ModalProvider>
-        {/* Enhanced Navigation */}
+        {/* Render Single Unified Navigation */}
         <Navigation />
-        {/* Conditionally render the content */}
         {isLoaded && <Outlet />}
-        {/* Modal rendered for the entire app */}
         <Modal />
       </ModalProvider>
     </>

@@ -6,7 +6,7 @@ import Layout from "./Layout";
 
 export const router = createBrowserRouter([
   {
-    element: <Layout />,
+    element: <Layout />, // Navigation is in Layout
     children: [
       {
         path: "/",
