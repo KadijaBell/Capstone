@@ -1,4 +1,4 @@
-import LoginFormModal from '../components/LoginFormModal/LoginFormModal';
+import LoginFormModal from '../../components/LoginFormModal/LoginFormModal';
 
 function LoginFormPage() {
   return (

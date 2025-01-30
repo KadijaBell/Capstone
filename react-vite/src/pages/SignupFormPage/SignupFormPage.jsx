@@ -1,4 +1,4 @@
-import SignupFormModal from '../components/SignupFormModal/SignupFormModal';
+import SignupFormModal from '../../components/SignUpFormModal/SignUpFormModal';
 
 function SignupFormPage() {
   return (

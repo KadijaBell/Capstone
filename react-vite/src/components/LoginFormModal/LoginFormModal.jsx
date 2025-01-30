@@ -24,12 +24,69 @@ function LoginFormModal({isPage = false}) {
     } else {
       if (!isPage) closeModal();
       navigate("/dashboard");
+
+    } catch (error) {
+      console.error("Login error:", error);
+      setErrors(["An error occurred during login. Please try again."]);
     }
   };
 
-    const handleChange = (error) => {
-      setFormData({ ...formData, [error.target.name]: error.target.value });
+  const handleChange = (error) => {
+    setFormData({ ...formData, [error.target.name]: error.target.value });
+  }
+
+  const handleDemoLogin = async (e) => {
+    e.preventDefault();
+    const demoData = {
+      user: "KBB",
+      password: "Newpassword123!"
+    };
+
+    try {
+      const serverResponse = await dispatch(thunkLogin(demoData));
+
+      if (serverResponse && serverResponse.errors) {
+        setErrors(serverResponse.errors);
+        return;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      if (!isPage) closeModal();
+      navigate("/dashboard");
+
+    } catch (error) {
+      console.error("Demo login error:", error);
+      setErrors(["Failed to log in as demo user"]);
     }
+  };
+
+  const handleAdminLogin = async (e) => {
+    e.preventDefault();
+    const adminData = {
+      user: "admin@capstone.com",
+      password: "secureadminpassword"
+    };
+
+    try {
+      const serverResponse = await dispatch(thunkLogin(adminData));
+
+      if (serverResponse && serverResponse.errors) {
+        setErrors(serverResponse.errors);
+        return;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      if (!isPage) closeModal();
+      navigate("/dashboard");
+
+    } catch (error) {
+      console.error("Admin login error:", error);
+      setErrors(["Failed to log in as admin user"]);
+    }
+  };
+
   return (
     <div className="w-full" style={{ backgroundColor: "#2c3e50" }}>
       {/* Modal Title */}
