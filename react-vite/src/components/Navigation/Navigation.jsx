@@ -1,6 +1,7 @@
 //import { NavLink} from "react-router-dom";
 import { useSelector } from "react-redux";
-import { useLocation,useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
 //import { motion } from "framer-motion";
 import ProfileButton from "./ProfileButton";
 import OpenModalButton from "../OpenModalButton"; // This component triggers the modal

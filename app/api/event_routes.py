@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.models import  Event,User,Service,Agency, db
 from flask_login import current_user, login_required
+from datetime import datetime
 
 event_routes = Blueprint('events', __name__)
 
@@ -46,6 +47,25 @@ def get_user_events():
     user_events = Event.query.filter_by(client_id=current_user.id).all()
     return {'events': [event.to_dict() for event in user_events]}
 
+
+@event_routes.route('/public-approved', methods=['GET'])
+def get_approved_public_events():
+    """
+    Get all approved events - public route
+    """
+    try:
+        events = Event.query.filter_by(status='approved').all()
+        return jsonify({
+            'events': [event.to_dict() for event in events]
+        })
+    except Exception as e:
+        print(f"Error fetching public events: {str(e)}")
+        return jsonify({
+            'error': 'Failed to fetch events',
+            'details': str(e)
+        }), 500
+
+
 #POST
 @event_routes.route('/', methods=['POST'])
 @login_required
@@ -56,17 +76,74 @@ def create_event():
     if current_user.role != 'user':
         return {'error': 'Unauthorized'}, 403
 
+    try:
+        data = request.get_json()
+        print("Received data:", data)
+
+        # Convert date string to datetime object
+        event_date = None
+        if data.get('date'):
+            try:
+                event_date = datetime.strptime(data.get('date'), '%Y-%m-%d')
+            except ValueError as e:
+                return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
+
+        new_event = Event(
+            title=data.get('title'),
+            description=data.get('description'),
+            type=data.get('type'),
+            client_id=current_user.id,
+            organization=data.get('organization'),
+            location=data.get('location'),
+            date=event_date,
+            status='pending',
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+        )
+
+        db.session.add(new_event)
+        db.session.commit()
+        return jsonify(new_event.to_dict()), 201
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error creating event: {str(e)}")
+        return jsonify({'error': str(e)}), 400
+
+@event_routes.route('/event-requests', methods=['POST'])
+def create_event_request():
+    """
+    Create a new event request from non-authenticated users
+    """
     data = request.get_json()
-    new_event = Event(
-        title=data['title'],
-        description=data['description'],
-        type=data.get('type', 'event'),
-        status='pending',
-        client_id=current_user.id
-    )
-    db.session.add(new_event)
-    db.session.commit()
-    return jsonify(new_event.to_dict()), 201
+
+    try:
+        new_event = Event(
+            title=data.get('title'),
+            description=data.get('description'),
+            type=data.get('serviceType'),
+            status='pending',
+            organization=data.get('organization'),
+            location=data.get('location'),
+            date=data.get('date'),
+            client_id=current_user.id
+        )
+
+        db.session.add(new_event)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Event request submitted successfully'
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+
 
 #PUT
 @event_routes.route('/<int:id>', methods=['PUT'])

@@ -13,12 +13,12 @@ function LandingPage() {
           <OpenModalButton
             buttonText="Get Started"
             modalComponent={<SignUpFormModal />}
-            className="bg-gold text-midnight px-8 py-3 rounded-full text-lg font-semibold hover:bg-ivory hover:text-midnight transition duration-300"
-          
+            className="bg-gold border border-ivory px-6 py-3 rounded-lg text-lg  text-midnight font-semibold hover:bg-ivory hover:text-midnight transition duration-300"
+
           />
         }
         secondaryButtonText="Learn More"
-        secondaryButtonLink="/about"
+        secondaryButtonLink="/about-us"
       />
 
 

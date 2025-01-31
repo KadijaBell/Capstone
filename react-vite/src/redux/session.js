@@ -48,19 +48,16 @@ export const thunkLogin = (credentials) => async (dispatch) => {
     const response = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(credentials),
+      body: JSON.stringify(credentials)
     });
 
-    if (!response.ok) {
-      const errors = await response.json();
-      throw errors;
+    const data = await response.json();
+    if (response.ok) {
+      dispatch(setUser(data));
     }
-
-    const user = await response.json();
-    dispatch(setUser(user));
-    return null;
-  } catch (errors) {
-    return errors; 
+    return data;  // Make sure we're returning the full response data
+  } catch (error) {
+    return { errors: ['An error occurred during login'] };
   }
 };
 

@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
-from app.models import Event, User, Service, Agency,Metric, db
+from app.models import Event, User, Service, Agency,Metric, ContactSubmission, db
 from flask_login import current_user, login_required
+from datetime import datetime
 
 
 admin_routes = Blueprint('admin', __name__)
@@ -12,18 +13,62 @@ def get_admin_events():
     """
     Retrieve all event requests for admin review.
     """
-    if current_user.role != 'admin':
-        return {'error': 'Unauthorized'}, 403
+    try:
+        if current_user.role != 'admin':
+            return jsonify({'error': 'Unauthorized'}), 403
 
-    status = request.args.get('status')
-    events_query = Event.query
+        status = request.args.get('status')
+        events_query = Event.query
 
-    if status:
-        events = events_query.filter(Event.status == status)
+        if status:
+            events = events_query.filter(Event.status == status).all()
+        else:
+            events = events_query.all()
 
-    else:
-        events = events_query.all()
-    return {'events': [event.to_dict() for event in events]}
+        print(f"Found {len(events)} events") # Debug log
+        return jsonify({
+            'events': [event.to_dict() for event in events],
+            'count': len(events)
+        })
+
+    except Exception as e:
+        print(f"Error in get_admin_events: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+
+@admin_routes.route('/contact-submissions', methods=['GET'])
+@login_required
+def get_contact_submissions():
+    """
+    Get all contact form submissions (admin only)
+    """
+    try:
+        if current_user.role != 'admin':
+            return jsonify({'error': 'Unauthorized'}), 403
+
+        submissions = ContactSubmission.query.order_by(
+            ContactSubmission.created_at.desc()
+        ).all()
+
+        print(f"Found {len(submissions)} contact submissions") # Debug log
+        return jsonify({
+            'submissions': [sub.to_dict() for sub in submissions],
+            'count': len(submissions)
+        })
+
+    except Exception as e:
+        print(f"Error in get_contact_submissions: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+
+@admin_routes.route('/metrics', methods=['GET'])
+@login_required
+def get_metrics():
+    """
+    Retrieve all metrics.
+    """
+    metrics = Metric.query.all()
+    return jsonify([metric.to_dict() for metric in metrics]),200
 
 #POST
 @admin_routes.route('/contact', methods=['POST'])
@@ -41,7 +86,31 @@ def contact_client():
     message = data.get('message')
     return {'status': f'Message sent to client {client_id}: {message}'}
 
-#PUT
+
+
+@admin_routes.route('/contact-submissions', methods=['POST'])
+def submit_contact():
+    """
+    Handle contact form submissions from non-authenticated users
+    """
+    data = request.get_json()
+
+    # Create a new contact submission
+    new_submission = ContactSubmission(
+        name=data.get('name'),
+        email=data.get('email'),
+        subject=data.get('subject'),
+        message=data.get('message'),
+        status='pending',
+        created_at=datetime.utcnow()
+    )
+
+    db.session.add(new_submission)
+    db.session.commit()
+
+    return jsonify({'message': 'Contact submission received successfully'}), 200
+
+#PUT/PATCH
 @admin_routes.route('/events/<int:id>', methods=['PUT'])
 @login_required
 def update_event(id):
@@ -57,6 +126,31 @@ def update_event(id):
         event.status = data['status']
         db.session.commit()
     return jsonify(event.to_dict())
+
+@admin_routes.route('/events/<int:event_id>/approve', methods=['PATCH'])
+@login_required
+def approve_event(event_id):
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Unauthorized access'}), 403
+    event = Event.query.get(event_id)
+    if not event:
+        return jsonify({'error': 'Event not found'}), 404
+    event.status = 'approved'
+    db.session.commit()
+    return event.to_dict()
+
+@admin_routes.route('/events/<int:event_id>/reject', methods=['PATCH'])
+@login_required
+def reject_event(event_id):
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Unauthorized access'}), 403
+    event = Event.query.get(event_id)
+    if not event:
+        return jsonify({'error': 'Event not found'}), 404
+    event.status = 'denied'
+    db.session.commit()
+    return event.to_dict()
+
 
 #DELETE
 @admin_routes.route('/events/<int:id>', methods=['DELETE'])
@@ -106,36 +200,3 @@ def admin_dashboard():
             "pending_events": [event.to_dict() for event in pending_events_list],
             "events": [event.to_dict() for event in events],
         }
-@admin_routes.route('/events/<int:event_id>/approve', methods=['PATCH'])
-@login_required
-def approve_event(event_id):
-    if current_user.role != 'admin':
-        return jsonify({'error': 'Unauthorized access'}), 403
-    event = Event.query.get(event_id)
-    if not event:
-        return jsonify({'error': 'Event not found'}), 404
-    event.status = 'approved'
-    db.session.commit()
-    return event.to_dict()
-
-@admin_routes.route('/events/<int:event_id>/reject', methods=['PATCH'])
-@login_required
-def reject_event(event_id):
-    if current_user.role != 'admin':
-        return jsonify({'error': 'Unauthorized access'}), 403
-    event = Event.query.get(event_id)
-    if not event:
-        return jsonify({'error': 'Event not found'}), 404
-    event.status = 'inactive'
-    db.session.commit()
-    return event.to_dict()
-
-
-@admin_routes.route('/metrics', methods=['GET'])
-@login_required
-def get_metrics():
-    """
-    Retrieve all metrics.
-    """
-    metrics = Metric.query.all()
-    return jsonify([metric.to_dict() for metric in metrics]),200

@@ -49,7 +49,7 @@ function ProfileButton() {
       </button>
       {showMenu && (
         <ul
-        className="profile-dropdown bg-white p-3 shadow-md rounded-md absolute z-50"
+        className="absolute right-0 mt-2 bg-white p-3 shadow-md rounded-md z-50"
         ref={ulRef}
       >
           {user ? (
@@ -64,7 +64,7 @@ function ProfileButton() {
               <li>
                 <button
                   className="text-green-500 hover:underline"
-                  onClick={() => navigate(user.role === "admin" ? "/admin/dashboard" : "/user/dashboard")}
+                  onClick={() => navigate(user.role === "admin" ? "/admin/dashboard" : "/events/dashboard")}
                 >
                   Dashboard
                 </button>

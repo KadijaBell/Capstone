@@ -7,8 +7,17 @@ class Event(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String, nullable=False)
+    organization = db.Column(db.String(255))
+    location = db.Column(db.String(255))
+    date = db.Column(db.DateTime)
     description = db.Column(db.Text, nullable=False)
-    type = db.Column(db.Enum('event', 'cause', name='event_type'), nullable=False)
+    type = db.Column(db.Enum(
+        'event',
+        'portfolio',
+        'community',
+        'data',
+        'influencer',
+        'celebrity', name='event_type'), nullable=False)
     status = db.Column(db.Enum('active', 'inactive', 'pending','close','approved',name='event_status'), nullable=False)
     agency_id = db.Column(db.Integer, db.ForeignKey('agency.id'))
     client_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
@@ -30,6 +39,9 @@ class Event(db.Model):
             'description': self.description,
             'type': self.type,
             'status': self.status,
+            'organization': self.organization,
+            'location': self.location,
+            'date': self.date,
             'client_id': self.client_id,
             'agency_id': self.agency_id,
             'service_id': self.service_id,

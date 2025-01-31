@@ -23,16 +23,16 @@ def login():
     Logs a user in
     """
     form = LoginForm()
-    # Get the csrf_token from the request cookie and put it into the
-    # form manually to validate_on_submit can be used
     form['csrf_token'].data = request.cookies['csrf_token']
     if form.validate_on_submit():
-        # Add the user to the session, we are logged in!
-        identity = form.user.data
-        user = User.query.filter((User.email == identity) | (User.username == identity)).first()
-        login_user(user)
-        return user.to_dict()
-    return form.errors, 401
+        user = User.query.filter(
+            (User.email == form.data['user']) |
+            (User.username == form.data['user'])
+        ).first()
+        if user and user.check_password(form.data['password']):
+            login_user(user)
+            return user.to_dict()
+    return {'errors': ['Invalid credentials']}, 401
 
 
 @auth_routes.route('/logout')

@@ -56,7 +56,11 @@ function SignupFormModal({isPage = false}) {
       setErrors(serverResponse);
     } else {
       if (!isPage) closeModal();
-      navigate("/dashboard");
+      if (serverResponse && serverResponse.user && serverResponse.user.role === 'admin') {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     }
   };
 

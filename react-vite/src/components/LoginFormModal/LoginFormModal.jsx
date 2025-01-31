@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { thunkLogin } from "../../redux/session";
-import { useDispatch } from "react-redux";
+import { useDispatch,  } from "react-redux";
 import { useModal } from "../../context/Modal";
 
 function LoginFormModal({isPage = false}) {
   const dispatch = useDispatch();
+
   const [formData, setFormData] = useState({
     user: "",
     password: "",
@@ -15,7 +16,10 @@ function LoginFormModal({isPage = false}) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrors([]);
+    const data = {
+      user: formData.user,
+      password: formData.password
+    };
 
     const serverResponse = await dispatch(thunkLogin({ email, password }));
 
@@ -27,7 +31,7 @@ function LoginFormModal({isPage = false}) {
 
     } catch (error) {
       console.error("Login error:", error);
-      setErrors(["An error occurred during login. Please try again."]);
+      setErrors(["An error occurred during login"]);
     }
   };
 
@@ -38,22 +42,24 @@ function LoginFormModal({isPage = false}) {
   const handleDemoLogin = async (e) => {
     e.preventDefault();
     const demoData = {
-      user: "KBB",
-      password: "Newpassword123!"
+      user: "Demo",
+      password: "password"
     };
 
     try {
       const serverResponse = await dispatch(thunkLogin(demoData));
+      console.log("Server response:", serverResponse);
 
       if (serverResponse && serverResponse.errors) {
         setErrors(serverResponse.errors);
         return;
       }
 
-      await new Promise(resolve => setTimeout(resolve, 100));
 
-      if (!isPage) closeModal();
-      navigate("/dashboard");
+      if (serverResponse && !serverResponse.errors) {
+        if (!isPage) closeModal();
+        navigate("/dashboard");
+      }
 
     } catch (error) {
       console.error("Demo login error:", error);
@@ -79,7 +85,7 @@ function LoginFormModal({isPage = false}) {
       await new Promise(resolve => setTimeout(resolve, 100));
 
       if (!isPage) closeModal();
-      navigate("/dashboard");
+        navigate("/admin/dashboard");
 
     } catch (error) {
       console.error("Admin login error:", error);

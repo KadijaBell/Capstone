@@ -37,8 +37,24 @@ export const router = createBrowserRouter([
         element: <SignupFormPage />,
       },
       {
-        path: "about-us",
-        element: <AboutUs />,
+        path: "/about-us",
+        element: <AboutUsPage />,
+      },
+      {
+        path: "/events",
+        element: <EventsPage />,
+      },
+      {
+        path: "/events/approved",
+        element: <EventsPage />,
+      },
+      {
+        path: "/agencies",
+        element: <AgencyPage />,
+      },
+      {
+        path: "/metrics",
+        element: <InsightsPage />,
       },
       {
         path: "/test",
