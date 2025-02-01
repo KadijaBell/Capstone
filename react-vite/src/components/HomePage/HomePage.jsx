@@ -3,6 +3,17 @@ import Insights from "../Insights/Insights";
 import Agencies from "../Agencies/Agencies";
 import Masonry from "react-responsive-masonry"
 
+const images =[
+  "/assets/capstone-image-1.jpg",
+  "/assets/capstone-image-2.jpg",
+  "/assets/capstone-image-3.jpg",
+  "/assets/capstone-image-4.jpg",
+  "/assets/capstone-image-5.jpg",
+  "/assets/capstone-image-6.jpg",
+  "/assets/capstone-image-7.jpg",
+  "/assets/capstone-image-8.jpg",
+];
+
 
 // Navbar Component
 const Navbar = () => {
@@ -109,29 +120,6 @@ const HeroSection = () => {
             </div>
           </div>
 
-          {/* Right Image Container */}
-          {/* <div className="flex flex-1 lg:w-1/2 relative max-w-3xl mx-auto lg:max-w-none">
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 w-full">
-              {[
-                "/assets/capstone-image-1.jpg",
-                "/assets/capstone-image-2.jpg",
-                "/assets/capstone-image-3.jpg",
-                "/assets/capstone-image-4.jpg",
-                "/assets/capstone-image-5.jpg",
-              ].map((src, index) => (
-                <div
-                  key={index}
-                  className="relative overflow-hidden rounded-lg shadow-lg"
-                >
-                  <img
-                    src={src}
-                    alt={`Capstone ${index + 1}`}
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>*/}
           <div className="flex flex-1 lg:w-1/2 relative max-w-3xl mx-auto lg:max-w-none overflow-hidden">
             <Masonry columnsCount={4} gutter="1rem">
               {[
