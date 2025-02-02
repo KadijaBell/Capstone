@@ -13,6 +13,22 @@ module.exports = {
         blush: "#f5c2c7",
         black: "#000000",
       },
+      animation: {
+        shine: "shine 1.5s infinite", // Add the shine animation
+      },
+      keyframes: {
+        shine: {
+          "0%": {
+            backgroundPosition: "-100% 0",
+          },
+          "50%": {
+            backgroundPosition: "100% 0",
+          },
+          "100%": {
+            backgroundPosition: "100% 0",
+          },
+        },
+      },
     },
   },
   plugins: [],
