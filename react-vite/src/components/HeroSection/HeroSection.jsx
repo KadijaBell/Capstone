@@ -17,7 +17,7 @@ const HeroSection = () => {
     <main className="w-full">
       <section className="relative pt-10 xl:pt-14 bg-midnight text-ivory">
         {/* Use a container with flex-col to stack elements vertically */}
-        <div className="mx-auto lg:max-w-7xl w-full px-5 sm:px-10 md:px-12 lg:px-5 flex flex-col gap-8 lg:gap-10 xl:gap-12">
+        <div className="mx-auto lg:max-w-7xl w-full px-5 sm:px-10 md:px-12 lg:px-5 flex flex-row gap-8 lg:gap-10 xl:gap-12">
           {/* Hero Text Section with Animation */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
