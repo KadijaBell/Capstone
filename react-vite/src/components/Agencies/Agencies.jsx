@@ -1,4 +1,8 @@
+import { useNavigate } from "react-router-dom";
+
 const Agencies = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="py-24 bg-midnight">
       <div className="max-w-7xl mx-auto px-5 sm:px-10 md:px-12 lg:px-5 relative">
@@ -8,22 +12,17 @@ const Agencies = () => {
               Ready to take your skills to the moon
             </h1>
             <p className="text-charcoal dark:text-ivory">
-              Lorem ipsum dolor sit amet consectetur
+              Lorem ipsum dolor sit amet consectetur.
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <a
-              href="#"
-              className="bg-charcoal dark:bg-ivory text-ivory dark:text-charcoal px-5 py-2.5 rounded-lg transition duration-300 ease-linear hover:bg-gold hover:text-black"
-            >
-              Read doc
-            </a>
-            <a
-              href="#"
+            {/* "Get Started" button navigates to the registration form */}
+            <button
+              onClick={() => navigate("/agency-page")}
               className="bg-gold text-black px-5 py-2.5 rounded-lg transition duration-300 ease-linear hover:bg-blush hover:text-black"
             >
               Get started
-            </a>
+            </button>
           </div>
         </div>
       </div>
@@ -31,4 +30,5 @@ const Agencies = () => {
     </section>
   );
 };
+
 export default Agencies;

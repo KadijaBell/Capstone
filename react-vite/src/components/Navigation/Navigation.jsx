@@ -6,16 +6,17 @@ import SignupFormModal from "../SignupFormModal";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 
+
 function Navigation() {
-  const sessionUser = useSelector((state) => state.session.user);
   const [navIsOpened, setNavIsOpened] = useState(false);
 
-  const closeNavbar = () => {
-    setNavIsOpened(false);
-  };
+  const closeNavbar = () => setNavIsOpened(false);
+  const toggleNavbar = () => setNavIsOpened((prev) => !prev);
 
-  const toggleNavbar = () => {
-    setNavIsOpened((navIsOpened) => !navIsOpened);
+  // Function to scroll to a section with a matching id
+  const scrollToSection = (id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    closeNavbar();
   };
 
   return (
@@ -31,21 +32,21 @@ function Navigation() {
         <nav className="relative mx-auto lg:max-w-7xl w-full px-5 sm:px-10 md:px-12 lg:px-5 flex gap-x-5 justify-between items-center">
           {/* Brand & Home Link */}
           <div className="flex items-center min-w-max">
-            <NavLink
-              to="/"
-              onClick={closeNavbar}
-              className="relative flex items-center gap-2.5"
+            <a
+              onClick={() => scrollToSection("home")}
+              className="cursor-pointer relative flex items-center gap-2.5"
             >
               <span aria-hidden="true" className="flex">
                 <span className="w-3 h-6 rounded-l-full flex bg-gold" />
                 <span className="w-3 h-6 rounded-r-full flex bg-blush mt-2" />
               </span>
               <span className="inline-flex text-lg font-bold text-ivory dark:text-black">
-                Estam
+                Calif Pierre
               </span>
-            </NavLink>
+            </a>
           </div>
-          {/* Navigation Links & Authentication Buttons */}
+
+          {/* Navigation Links */}
           <div
             className={`absolute top-full left-0 bg-midnight dark:bg-charcoal lg:bg-transparent border-b border-charcoal dark:border-charcoal py-8 lg:py-0 px-5 sm:px-10 md:px-12 lg:px-0 lg:border-none w-full lg:top-0 lg:relative lg:w-max lg:flex lg:transition-none duration-300 ease-linear gap-x-6 ${
               navIsOpened
@@ -55,37 +56,37 @@ function Navigation() {
           >
             <ul className="flex flex-col lg:flex-row gap-6 lg:items-center text-ivory dark:text-gray-300 lg:w-full lg:justify-center">
               <li>
-                <NavLink
-                  exact="true"
-                  to="/"
-                  onClick={closeNavbar}
-                  className="relative py-2.5 duration-300 ease-linear hover:text-gold"
+                <button
+                  onClick={() => scrollToSection("home")}
+                  className="cursor-pointer py-2.5 duration-300 ease-linear hover:text-gold"
                 >
                   Home
-                </NavLink>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => scrollToSection("agencies")}
+                  className="cursor-pointer py-2.5 duration-300 ease-linear hover:text-gold"
+                >
+                  Agencies
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => scrollToSection("insights")}
+                  className="cursor-pointer py-2.5 duration-300 ease-linear hover:text-gold"
+                >
+                  Insights
+                </button>
               </li>
             </ul>
+
+            {/* Authentication Buttons (if needed) */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 lg:min-w-max mt-10 lg:mt-0">
-              {sessionUser ? (
-                // If user is logged in, show the profile button.
-                <ProfileButton user={sessionUser} />
-              ) : (
-                // If not, show buttons to open login and signup modals.
-                <>
-                  <OpenModalButton
-                    modalComponent={<LoginFormModal />}
-                    buttonText="Log In"
-                    onButtonClick={closeNavbar}
-                  />
-                  <OpenModalButton
-                    modalComponent={<SignupFormModal />}
-                    buttonText="Sign Up"
-                    onButtonClick={closeNavbar}
-                  />
-                </>
-              )}
+              {/* Insert authentication buttons here */}
             </div>
           </div>
+
           {/* Mobile Toggle Button */}
           <div className="flex items-center lg:hidden">
             <button

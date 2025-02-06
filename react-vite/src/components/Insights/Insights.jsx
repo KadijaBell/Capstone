@@ -59,7 +59,7 @@ const Insights = () => {
   };
 
   return (
-    <section className="relative overflow-hidden min-h-screen">
+    <section id="insights" className="relative overflow-hidden min-h-screen">
       {/* Foreground content */}
       <motion.div
         className="relative z-10 py-24 bg-charcoal text-ivory"
