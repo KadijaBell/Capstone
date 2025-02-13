@@ -1,5 +1,6 @@
 import Masonry from "react-responsive-masonry";
 import { motion } from "framer-motion";
+import BlurText from "../BlurText/BlurText";
 
 const images = [
   "/assets/capstone-image-1.jpg",
@@ -25,30 +26,36 @@ const HeroSection = () => {
             transition={{ duration: 0.8 }}
             className="mx-auto text-center lg:text-left flex flex-col max-w-3xl justify-center lg:justify-start lg:py-8"
           >
-            <h1 className="text-ivory dark:text-black text-4xl sm:text-6xl lg:text-5xl xl:text-6xl font-semibold">
-              Build Your Online Platform with the best{" "}
+            {/* Hero Heading with Animated Blur Effect */}
+            <h1 className="font-semibold">
+              {/* First part of the heading */}
+              <BlurText
+                text="Build Your Online Platform with the best Digital Agency"
+                className="text-ivory dark:text-black text-4xl sm:text-6xl lg:text-5xl xl:text-6xl inline-block"
+                delay={150}
+                animateBy="words"
+                direction="top"
+              />{" "}
+              {/* Second part with special styling */}
               <span className="bg-charcoal dark:bg-black dark:text-gold inline-block border border-dashed border-gold px-3">
-                Digital Agency
+                <BlurText
+                  text="Calif Pierre"
+                  className="text-ivory dark:text-gold text-4xl sm:text-6xl lg:text-5xl xl:text-6xl inline-block text- italic"
+                  delay={150}
+                  animateBy="words"
+                  direction="top"
+                />
               </span>
             </h1>
-            <p className="mt-10 text-blush dark:text-gray-300 lg:text-lg max-w-2xl lg:max-w-none mx-auto">
-              Lorem ipsum dolor sit amet consectetur adipisicing elit.
-              Dignissimos, fugit! Laborum quo maxime at sapiente quasi.
-            </p>
-            <div className="mt-10 flex gap-4 justify-center lg:justify-start flex-wrap">
-              <a
-                href="#"
-                className="relative px-6 py-3 before:absolute before:inset-0 before:rounded-lg text-ivory dark:text-black"
-              >
-                Get Started
-              </a>
-              <a
-                href="#"
-                className="relative px-6 py-3 before:absolute before:inset-0 before:rounded-lg text-gold"
-              >
-                Learn More
-              </a>
-            </div>
+
+            {/* Hero Paragraph with Animated Blur Effect */}
+            <BlurText
+              text="Lorem ipsum dolor sit amet consectetur adipisicing elit. Dignissimos, fugit! Laborum quo maxime at sapiente quasi."
+              className="mt-10 text-blush dark:text-gray-300 lg:text-lg max-w-2xl lg:max-w-none mx-auto"
+              delay={200}
+              animateBy="words"
+              direction="top"
+            />
           </motion.div>
 
           {/* Masonry Section placed below the text content */}
