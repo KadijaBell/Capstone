@@ -41,12 +41,16 @@ export const router = createBrowserRouter([
         element: <AboutUsPage />,
       },
       {
-        path: "/events",
+        path: "/public",
         element: <EventsPage />,
       },
+      // {
+      //   path: "/events",
+      //   element: <EventsPage />,
+      // },
       {
-        path: "/events/approved",
-        element: <EventsPage />,
+        path: "/events/:id",
+        element: <EventDetailsPage />,
       },
       {
         path: "/agencies",

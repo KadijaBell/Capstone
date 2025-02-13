@@ -1,7 +1,14 @@
 import { motion } from "framer-motion";
 import { fetchAPI } from "../../utils/api";
+import { useNavigate } from "react-router-dom";
+import { useNotifications } from '../../hooks/useNotifications';
+import { useState } from 'react';
 
-function EventCard({ event, onStatusChange }) {
+function EventCard({ event, onStatusChange, isAdmin }) {
+  const navigate = useNavigate();
+  const { sendNotification } = useNotifications();
+  const [showMessageForm, setShowMessageForm] = useState(false);
+  const [message, setMessage] = useState('');
 
   const formatDate = (dateString) => {
     if (!dateString) return "Date not available";
@@ -13,22 +20,61 @@ function EventCard({ event, onStatusChange }) {
     });
   };
 
-  const handleApprove = async () => {
+  const handleStatusChange = async (newStatus) => {
     try {
-      await fetchAPI(`/api/admin/events/${event.id}/approve`, { method: "PATCH" });
-      if (onStatusChange) onStatusChange();
+      await fetchAPI(`/api/events/${event.id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: newStatus })
+      });
+      onStatusChange();
     } catch (error) {
-      console.error("Error approving event:", error.message);
+      console.error('Error updating status:', error);
     }
   };
 
-  const handleReject = async () => {
+  const handleMessageSubmit = async () => {
     try {
-      await fetchAPI(`/api/admin/events/${event.id}/reject`, { method: "PATCH" });
-      if (onStatusChange) onStatusChange();
+      await fetchAPI(`/api/events/${event.id}/message`, {
+        method: 'POST',
+        body: JSON.stringify({
+          message,
+          recipientId: isAdmin ? event.userId : event.adminId
+        })
+      });
+      setMessage('');
+      setShowMessageForm(false);
     } catch (error) {
-      console.error("Error rejecting event:", error.message);
+      console.error('Error sending message:', error);
     }
+  };
+
+  const handleLearnMore = () => {
+    console.log("Navigating to event:", event.id);
+    navigate(`/events/${event.id}`);
+  };
+
+  const handleMessageAdmin = async () => {
+    await sendNotification(
+      1, // Admin user ID
+      `New message regarding event: ${event.title}`,
+      event.id
+    );
+    // Show success message to user
+    alert('Message sent to admin successfully');
+  };
+
+  const renderActionButtons = () => {
+    if (event.status === 'pending' || event.status === 'rejected') {
+      return (
+        <button
+          onClick={() => handleMessageAdmin()}
+          className="mt-4 bg-gold text-midnight px-4 py-2 rounded hover:bg-gold/90 transition"
+        >
+          Message Admin
+        </button>
+      );
+    }
+    return null;
   };
 
   return (
@@ -56,20 +102,67 @@ function EventCard({ event, onStatusChange }) {
         <p className="text-charcoal/80 mb-4">{event?.description}</p>
         <div className="flex justify-between items-center">
           <span className="text-sm text-charcoal/60">{event?.location}</span>
-          <button className="bg-gold text-midnight px-4 py-2 rounded-lg hover:bg-ivory transition">
+          <button
+            onClick={handleLearnMore}
+            className="px-4 py-2 bg-gold text-white rounded-lg hover:bg-gold/90 transition-colors"
+          >
             Learn More
           </button>
         </div>
-        {event?.status === "pending" && (
-          <div className="mt-4 space-x-2">
-            <button onClick={handleApprove} className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-              Approve
-            </button>
-            <button onClick={handleReject} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
-              Reject
+        {isAdmin ? (
+          <div className="space-y-4">
+            {event.status === 'pending' && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleStatusChange('approved')}
+                  className="bg-mint text-midnight px-4 py-2 rounded-lg hover:bg-mint/80"
+                >
+                  Approve
+                </button>
+                <button
+                  onClick={() => handleStatusChange('denied')}
+                  className="bg-blush text-midnight px-4 py-2 rounded-lg hover:bg-blush/80"
+                >
+                  Deny
+                </button>
+              </div>
+            )}
+            <button
+              onClick={() => setShowMessageForm(!showMessageForm)}
+              className="bg-gold text-midnight px-4 py-2 rounded-lg hover:bg-gold/80"
+            >
+              Message Client
             </button>
           </div>
+        ) : (
+          renderActionButtons()
         )}
+
+        {showMessageForm && (
+          <div className="mt-4">
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-mint"
+              placeholder={`Message to ${isAdmin ? 'client' : 'admin'}...`}
+            />
+            <div className="flex justify-end gap-2 mt-2">
+              <button
+                onClick={() => setShowMessageForm(false)}
+                className="text-charcoal hover:text-midnight"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleMessageSubmit}
+                className="bg-mint text-midnight px-4 py-2 rounded-lg hover:bg-mint/80"
+              >
+                Send Message
+              </button>
+            </div>
+          </div>
+        )}
+        {renderActionButtons()}
       </div>
     </motion.div>
   );

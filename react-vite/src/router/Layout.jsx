@@ -5,6 +5,7 @@ import { ModalProvider, Modal } from "../context/Modal";
 import { thunkAuthenticate } from "../redux/session";
 import Navigation from "../components/Navigation/Navigation";
 import Footer from "../components/Footer/Footer";
+import { NotificationProvider } from "../components/Notifications/NotificationContext";
 
 export default function Layout() {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -14,12 +15,16 @@ export default function Layout() {
   }, [dispatch]);
 
   return (
-    <div >
+    <div className="flex flex-col min-h-screen">
       <ModalProvider>
+        <NotificationProvider>
           <Modal />
           <Navigation />
-          {isLoaded && <Outlet />}
+          <main className="flex-grow">
+            {isLoaded && <Outlet />}
+          </main>
           <Footer />
+        </NotificationProvider>
       </ModalProvider>
     </div>
   );

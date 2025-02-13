@@ -70,22 +70,27 @@ function LoginFormModal({isPage = false}) {
   const handleAdminLogin = async (e) => {
     e.preventDefault();
     const adminData = {
-      user: "admin@capstone.com",
+      user: "AdminUser",
       password: "secureadminpassword"
     };
 
     try {
       const serverResponse = await dispatch(thunkLogin(adminData));
+      console.log("Admin login response:", serverResponse);
 
-      if (serverResponse && serverResponse.errors) {
+      if (serverResponse.errors) {
         setErrors(serverResponse.errors);
         return;
       }
 
-      await new Promise(resolve => setTimeout(resolve, 100));
-
       if (!isPage) closeModal();
+
+      // Check role and redirect
+      if (serverResponse.role === 'admin') {
         navigate("/admin/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
 
     } catch (error) {
       console.error("Admin login error:", error);

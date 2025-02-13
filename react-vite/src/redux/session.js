@@ -11,15 +11,21 @@ const removeUser = () => ({
 });
 
 export const thunkAuthenticate = () => async (dispatch) => {
-	const response = await fetch("/api/auth/" );
-	if (response.ok) {
-		const data = await response.json();
-		if (data.errors) {
-			return;
-		}
+  try {
+    const response = await fetch("/api/auth/", {
+      credentials: 'include'
+    });
 
-		dispatch(setUser(data));
-	}
+    if (response.ok) {
+      const data = await response.json();
+      console.log("Auth check response:", data); // Debug log
+      dispatch(setUser(data));
+      return data;
+    }
+  } catch (error) {
+    console.error("Auth check error:", error);
+    dispatch(removeUser());
+  }
 };
 
 // export const thunkLogin = (credentials) => async (dispatch) => {
@@ -45,18 +51,26 @@ export const thunkAuthenticate = () => async (dispatch) => {
 
 export const thunkLogin = (credentials) => async (dispatch) => {
   try {
+    console.log("Login credentials:", credentials); // Debug log
+
     const response = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: 'include', // Important for session cookies
       body: JSON.stringify(credentials)
     });
 
     const data = await response.json();
+    console.log("Login response data:", data); // Debug log
+
     if (response.ok) {
       dispatch(setUser(data));
+      return data;
+    } else {
+      return data; // This will contain any error messages
     }
-    return data;  // Make sure we're returning the full response data
   } catch (error) {
+    console.error("Login error:", error);
     return { errors: ['An error occurred during login'] };
   }
 };

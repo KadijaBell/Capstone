@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request
-from app.models import Event, User, Service, Agency,Metric, ContactSubmission, db
+from app.models import Event, User, Service, Agency,Metric, ContactSubmission, Notification, db
 from flask_login import current_user, login_required
 from datetime import datetime
+
 
 
 admin_routes = Blueprint('admin', __name__)
@@ -110,6 +111,65 @@ def submit_contact():
 
     return jsonify({'message': 'Contact submission received successfully'}), 200
 
+
+@admin_routes.route('/messages/<int:message_id>/reply', methods=['POST'])
+@login_required
+def reply_to_message(message_id):
+    """
+    Handle admin replies to contact submissions
+    """
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    try:
+        data = request.get_json()
+        message = data.get('message')
+
+        # Find the contact submission
+        submission = ContactSubmission.query.get_or_404(message_id)
+
+        # Update the submission status and add reply
+        submission.status = 'replied'
+        submission.admin_reply = message
+        submission.replied_at = datetime.utcnow()
+        submission.replied_by = current_user.id
+
+        db.session.commit()
+
+        return jsonify({'message': 'Reply sent successfully'}), 200
+
+    except Exception as e:
+        print(f"Error in reply_to_message: {str(e)}")
+        return jsonify({'error': 'Failed to send reply'}), 500
+
+@admin_routes.route('/events/<int:event_id>/message', methods=['POST'])
+@login_required
+def send_message(event_id):
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    data = request.get_json()
+    message_content = data.get('message')
+
+    if not message_content:
+        return jsonify({'error': 'Message content is required'}), 400
+
+    event = Event.query.get(event_id)
+    if not event:
+        return jsonify({'error': 'Event not found'}), 404
+
+    new_notification = Notification(
+        user_id=event.client_id,
+        event_id=event.id,
+        message=message_content,
+        created_at=datetime.utcnow()
+    )
+
+    db.session.add(new_notification)
+    db.session.commit()
+
+    return jsonify(new_notification.to_dict()), 201
+
 #PUT/PATCH
 @admin_routes.route('/events/<int:id>', methods=['PUT'])
 @login_required
@@ -172,6 +232,7 @@ def delete_event(id):
 @admin_routes.route('/dashboard', methods=['GET'])
 @login_required
 def admin_dashboard():
+    print(f"Admin dashboard access - User: {current_user}, Role: {current_user.role}")  # Debug log
     """
     Dashboard route for both users and admins.
     - Regular users (clients) see only their events.

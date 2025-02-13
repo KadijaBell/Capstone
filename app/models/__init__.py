@@ -6,3 +6,4 @@ from .services import Service
 from .agencies import Agency
 from .metrics import Metric
 from .contact_submission import ContactSubmission
+from .notifications import Notification

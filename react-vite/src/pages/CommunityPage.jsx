@@ -1,36 +1,80 @@
 import { motion } from "framer-motion";
 import EventCard from "../components/EventCard/EventCard";
-import EventRequestForm from "../components/EventRequestForm/EventRequestForm";
+import EventServiceRequestForm from "../components/EventRequestForm/EventServiceRequestForm";
 import { useState, useEffect } from "react";
-import { fetchAPI } from "../utils/api";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
+
 function CommunityPage() {
   const [events, setEvents] = useState([]);
   const [showEventForm, setShowEventForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetchAPI("/api/events/public-approved");  // Updated endpoint
-        if (response && response.events) {
-          setEvents(response.events);
-        } else {
-          throw new Error("No events data received");
-        }
-      } catch (error) {
-        console.error("Error fetching events:", error);
-        setError("Failed to load events");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchEvents = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/events/public", {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
 
+      if (!response.ok) {
+        throw new Error('Failed to fetch events');
+      }
+
+      const data = await response.json();
+      if (data && data.events) {
+        setEvents(data.events);
+      } else {
+        throw new Error("No events data received");
+      }
+    } catch (error) {
+      console.error("Error fetching events:", error);
+      setError("Failed to load events");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchEvents();
   }, []);
+
+  const handleEventSubmit = async (formData) => {
+    try {
+      console.log('Submitting form data:', formData);
+
+      const response = await fetch("/api/events", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(formData)
+      });
+
+      console.log('Response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to submit event');
+      }
+
+      const data = await response.json();
+      console.log('Success response:', data);
+
+      setShowEventForm(false);
+      fetchEvents();
+      alert('Event submitted successfully!');
+    } catch (error) {
+      console.error("Error submitting event:", error);
+      alert(error.message || "Failed to submit event. Please try again.");
+    }
+  };
 
   if (isLoading) {
     return <div className="h-screen"> <LoadingSpinner /> </div>;
@@ -75,7 +119,7 @@ function CommunityPage() {
           <h2 className="text-3xl font-bold text-midnight">Featured Events</h2>
           <div className="flex gap-4">
             <Link
-              to="/public-approved"
+              to="/public"
               className="bg-midnight text-ivory px-6 py-2 rounded-lg hover:bg-midnight/90 transition"
             >
               View All Events
@@ -155,7 +199,12 @@ function CommunityPage() {
 
       {/* Event Request Form Modal */}
       {showEventForm && (
-        <EventRequestForm onClose={() => setShowEventForm(false)} />
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <EventServiceRequestForm
+            onSubmit={handleEventSubmit}
+            onClose={() => setShowEventForm(false)}
+          />
+        </div>
       )}
     </motion.div>
   );

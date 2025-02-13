@@ -1,10 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import EventCard from "../EventCard/EventCard";
-import { fetchAPI } from "../../utils/api";
-import LoadingSpinner from "../LoadingSpinner";
+// import EventCard from "../EventCard/EventCard";
+// import { fetchAPI } from "../../utils/api";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import MessageHandler from '../MessageFunctions/MessageHandler'
+// import MessageFilters from './MessageFilters';
+import MessageThread from '../MessageFunctions/MessageThread';
+import MessageNotification from '../MessageFunctions/MessageNotifications';
+//import LoadingState from '../LoadingState/LoadingState';
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import NotificationBell from '../Notifications/NotificationBell';
+import MessageFilters from '../MessageFunctions/MessageFilters';
 
 function AdminDashboard() {
+    const navigate = useNavigate();
+    const user = useSelector(state => state.session.user);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [stats, setStats] = useState({
         approvedEvents: 0,
         pendingRequests: 0,
@@ -16,274 +29,361 @@ function AdminDashboard() {
         denied: []
     });
     const [messages, setMessages] = useState([]);
+    const [filteredMessages, setFilteredMessages] = useState([]);
+    const [messageFilter, setMessageFilter] = useState('all');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [showReplyForm, setShowReplyForm] = useState(null);
+    const [notification, setNotification] = useState({ show: false, message: '' });
+    const [isInboxOpen, setIsInboxOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('pending');
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [selectedEvent, setSelectedEvent] = useState(null);
     const [replyingTo, setReplyingTo] = useState(null);
-    const [replyMessage, setReplyMessage] = useState('');
 
-    const fetchDashboardData = async () => {
+    const fetchDashboardData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [eventsData, messagesData] = await Promise.all([
-                fetchAPI("/api/admin/events"),
-                fetchAPI("/api/admin/contact-submissions")
-            ]);
+            const response = await fetch("/api/admin/dashboard", {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
 
-            if (eventsData && Array.isArray(eventsData.events)) {
-                const approved = eventsData.events.filter(e => e.status === 'approved');
-                const pending = eventsData.events.filter(e => e.status === 'pending');
-                const denied = eventsData.events.filter(e => e.status === 'denied');
-
-                setStats({
-                    approvedEvents: approved.length,
-                    pendingRequests: pending.length,
-                    deniedRequests: denied.length
-                });
-
-                setEvents({
-                    approved,
-                    pending,
-                    denied
-                });
+            if (response.status === 401 || response.status === 403) {
+                console.log(`Authorization error: ${response.status}`);
+                navigate('/login');
+                return;
             }
 
-            if (messagesData && Array.isArray(messagesData.submissions)) {
-                setMessages(messagesData.submissions);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+
+            const data = await response.json();
+            console.log("Admin dashboard data received:", data);
+
+            if (!data || !data.events) {
+                throw new Error("No data received from server");
+            }
+
+            const approved = data.events.filter(e => e.status === 'approved');
+            const pending = data.events.filter(e => e.status === 'pending');
+            const denied = data.events.filter(e => e.status === 'denied');
+
+            setStats({
+                approvedEvents: approved.length,
+                pendingRequests: pending.length,
+                deniedRequests: denied.length
+            });
+
+            setEvents({
+                approved,
+                pending,
+                denied
+            });
+
+            if (data.messages) {
+                setMessages(data.messages);
+            }
+
         } catch (error) {
-            console.error("Error fetching dashboard data:", error);
-            setError("Failed to load dashboard data");
+            console.error("Error in fetchDashboardData:", error);
+            setError(error.message || "Failed to load dashboard data");
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [navigate]);
 
-    const handleReplySubmit = async (messageId) => {
+    useEffect(() => {
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+
+        if (user.role !== 'admin') {
+            navigate('/dashboard');
+            return;
+        }
+
+        fetchDashboardData();
+    }, [user, navigate, fetchDashboardData]);
+
+    useEffect(() => {
+        if (!messages) return;
+
+        let filtered = [...messages];
+
+        if (messageFilter !== 'all') {
+            filtered = filtered.filter(message => message.status === messageFilter);
+        }
+
+        if (searchTerm) {
+            filtered = filtered.filter(message =>
+                message.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                message.user_email.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
+
+        setFilteredMessages(filtered);
+    }, [messages, messageFilter, searchTerm]);
+
+    useEffect(() => {
+        console.log('Current user:', user);
+        console.log('Current messages:', messages);
+        console.log('Current replyingTo:', replyingTo);
+    }, [user, messages, replyingTo]);
+
+    const handleStatusUpdate = async (eventId, newStatus) => {
         try {
-            await fetchAPI(`/api/admin/messages/${messageId}/reply`, {
-                method: 'POST',
-                body: JSON.stringify({ message: replyMessage })
+            const response = await fetch(`/api/admin/events/${eventId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ status: newStatus })
             });
 
-            setReplyMessage('');
-            setReplyingTo(null);
+            if (!response.ok) throw new Error('Failed to update status');
+
             fetchDashboardData();
-        } catch (error) {
-            console.error("Error sending reply:", error);
-            setError("Failed to send reply");
+        } catch (err) {
+            console.error('Error updating status:', err);
         }
     };
 
-    useEffect(() => {
-        fetchDashboardData();
-    }, []);
+    const showNotification = (message, type = 'success') => {
+        setNotification({
+            show: true,
+            message,
+            type
+        });
+
+        setTimeout(() => {
+            setNotification(prev => ({ ...prev, show: false }));
+        }, 3000);
+    };
+
+    const handleReplySubmit = async (messageId, replyText) => {
+        try {
+            const response = await fetch(`/api/admin/messages/${messageId}/reply`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ message: replyText })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to send reply: ${errorText}`);
+            }
+
+            const updatedMessage = await response.json();
+            setMessages(messages.map(msg =>
+                msg.id === messageId ? updatedMessage : msg
+            ));
+            setShowReplyForm(null);
+            setNotification({
+                show: true,
+                message: 'Reply sent successfully'
+            });
+        } catch (error) {
+            console.error('Error sending reply:', error);
+            showNotification('Failed to send reply. Please try again.', 'error');
+        }
+    };
+
+    const handleMessageSubmit = async (eventId, messageText) => {
+        console.log('handleMessageSubmit called with:', { eventId, messageText });
+        try {
+            const response = await fetch(`/api/admin/events/${eventId}/message`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ message: messageText })
+            });
+            console.log('Message submit response:', response);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to send message: ${errorText}`);
+            }
+
+            setNotification({
+                show: true,
+                message: 'Message sent successfully!'
+            });
+            setSelectedEvent(null);
+            await fetchDashboardData();
+
+        } catch (error) {
+            console.error('Error sending message:', error);
+            setNotification({
+                show: true,
+                message: 'Failed to send message. Please try again.'
+            });
+        }
+    };
+
+    const StatCard = ({ title, value, color }) => (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white p-6 rounded-lg shadow-md"
+        >
+            <h3 className="text-xl font-semibold text-gray-700">{title}</h3>
+            <p className={`text-4xl font-bold ${color}`}>{value}</p>
+        </motion.div>
+    );
+
+    const renderMessages = () => {
+        console.log('renderMessages called with messages:', messages);
+        return (
+            <div className="space-y-4">
+                {messages.map((message) => (
+                    <MessageThread
+                        key={message.id}
+                        message={message}
+                        replies={message.admin_reply ? [{
+                            id: `reply-${message.id}`,
+                            content: message.admin_reply,
+                            created_at: message.replied_at
+                        }] : []}
+                        onReply={(messageId) => setReplyingTo(messageId)}
+                    />
+                ))}
+                {replyingTo && (
+                    <MessageHandler
+                        messageId={replyingTo}
+                        onSubmit={handleReplySubmit}
+                        type="reply"
+                        onCancel={() => setReplyingTo(null)}
+                    />
+                )}
+            </div>
+        );
+    };
 
     return (
-        <div className="max-w-7xl mx-auto px-4 py-8">
-            {/* Stats Cards */}
-            <motion.div
-                className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-            >
-                <div
-                    onClick={() => setActiveTab('approved')}
-                    className={`cursor-pointer bg-white/80 backdrop-blur-sm p-6 rounded-lg shadow-elegant
-                        ${activeTab === 'approved' ? 'ring-2 ring-gold' : ''}`}
-                >
-                    <div className="text-3xl font-bold text-green-600">{stats.approvedEvents}</div>
-                    <div className="text-charcoal/60">Approved Events</div>
-                </div>
-                <div
-                    onClick={() => setActiveTab('pending')}
-                    className={`cursor-pointer bg-white/80 backdrop-blur-sm p-6 rounded-lg shadow-elegant
-                        ${activeTab === 'pending' ? 'ring-2 ring-gold' : ''}`}
-                >
-                    <div className="text-3xl font-bold text-gold">{stats.pendingRequests}</div>
-                    <div className="text-charcoal/60">Pending Requests</div>
-                </div>
-                <div
-                    onClick={() => setActiveTab('denied')}
-                    className={`cursor-pointer bg-white/80 backdrop-blur-sm p-6 rounded-lg shadow-elegant
-                        ${activeTab === 'denied' ? 'ring-2 ring-gold' : ''}`}
-                >
-                    <div className="text-3xl font-bold text-red-500">{stats.deniedRequests}</div>
-                    <div className="text-charcoal/60">Denied Requests</div>
-                </div>
-            </motion.div>
-
-            {/* Tab Navigation */}
-            <motion.div
-                className="flex gap-4 mb-6"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-            >
-                <button
-                    onClick={() => setActiveTab('pending')}
-                    className={`px-4 py-2 rounded-lg ${
-                        activeTab === 'pending' ? 'bg-gold text-midnight' : 'bg-white/50 text-charcoal hover:bg-white/80'
-                    }`}
-                >
-                    Pending
-                </button>
-                <button
-                    onClick={() => setActiveTab('approved')}
-                    className={`px-4 py-2 rounded-lg ${
-                        activeTab === 'approved' ? 'bg-gold text-midnight' : 'bg-white/50 text-charcoal hover:bg-white/80'
-                    }`}
-                >
-                    Approved
-                </button>
-                <button
-                    onClick={() => setActiveTab('denied')}
-                    className={`px-4 py-2 rounded-lg ${
-                        activeTab === 'denied' ? 'bg-gold text-midnight' : 'bg-white/50 text-charcoal hover:bg-white/80'
-                    }`}
-                >
-                    Denied
-                </button>
-                <button
-                    onClick={() => setActiveTab('messages')}
-                    className={`px-4 py-2 rounded-lg ${
-                        activeTab === 'messages' ? 'bg-gold text-midnight' : 'bg-white/50 text-charcoal hover:bg-white/80'
-                    }`}
-                >
-                    Messages
-                </button>
-            </motion.div>
-
-            {/* Content Area */}
+        <div className="min-h-screen bg-gray-50 p-4">
             {isLoading ? (
-                <div className="h-64 flex items-center justify-center">
-                    <LoadingSpinner />
-                </div>
+                <LoadingSpinner />
             ) : error ? (
-                <p className="text-red-500 text-center">{error}</p>
+                <div className="text-red-500">{error}</div>
             ) : (
-                <motion.div
-                    layout
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                >
-                    {activeTab === 'messages' ? (
-                        messages.map((message, index) => (
-                            <motion.div
-                                key={message.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                                className="bg-white/80 backdrop-blur-sm p-6 rounded-lg shadow-elegant hover:shadow-lg transition-all"
-                            >
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center">
-                                            <span className="text-lg font-bold text-gold">
-                                                {message.name.charAt(0).toUpperCase()}
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-midnight">{message.name}</h3>
-                                            <p className="text-sm text-charcoal/60">{message.organization || 'Individual'}</p>
-                                        </div>
-                                    </div>
-                                    <span className="text-sm text-charcoal/60">
-                                        {new Date(message.created_at).toLocaleDateString()}
-                                    </span>
-                                </div>
-                                <h4 className="font-semibold text-gold mb-2">{message.subject}</h4>
-                                <p className="text-charcoal/80 mb-4">{message.message}</p>
-                                <AnimatePresence>
-                                    {replyingTo === message.id ? (
-                                        <motion.div
-                                            initial={{ opacity: 0, height: 0 }}
-                                            animate={{ opacity: 1, height: 'auto' }}
-                                            exit={{ opacity: 0, height: 0 }}
-                                            className="mt-4"
-                                        >
-                                            <textarea
-                                                value={replyMessage}
-                                                onChange={(e) => setReplyMessage(e.target.value)}
-                                                placeholder="Type your reply..."
-                                                className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-gold focus:border-transparent resize-none"
-                                                rows={4}
-                                            />
-                                            <div className="flex gap-2 mt-2">
-                                                <button
-                                                    onClick={() => handleReplySubmit(message.id)}
-                                                    className="px-4 py-2 bg-gold text-white rounded-lg hover:bg-gold/90 transition-colors"
-                                                >
-                                                    Send Reply
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        setReplyingTo(null);
-                                                        setReplyMessage('');
-                                                    }}
-                                                    className="px-4 py-2 bg-gray-100 text-charcoal rounded-lg hover:bg-gray-200 transition-colors"
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </div>
-                                        </motion.div>
-                                    ) : (
-                                        <div className="flex gap-3 mt-4">
-                                            <button
-                                                onClick={() => setReplyingTo(message.id)}
-                                                className="px-4 py-2 bg-gold text-white rounded-lg hover:bg-gold/90 transition-colors flex items-center gap-2"
-                                            >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                                                </svg>
-                                                Reply
-                                            </button>
-                                            <button className="px-4 py-2 bg-white text-charcoal rounded-lg hover:bg-gray-50 transition-colors">
-                                                Archive
-                                            </button>
-                                        </div>
-                                    )}
-                                </AnimatePresence>
+                <>
+                    {/* Header Section */}
+                    <div className="flex justify-between items-center mb-6">
+                        <h1 className="text-2xl font-bold text-midnight">Admin Dashboard</h1>
+                        <div className="flex items-center gap-4">
+                            <NotificationBell onClick={() => setIsInboxOpen(!isInboxOpen)} />
+                        </div>
+                    </div>
 
-                                {message.replies && message.replies.length > 0 && (
-                                    <div className="mt-4 pt-4 border-t border-gray-100">
-                                        <h5 className="text-sm font-semibold text-charcoal/60 mb-2">Previous Replies</h5>
-                                        {message.replies.map((reply, replyIndex) => (
-                                            <div key={replyIndex} className="bg-gray-50 rounded-lg p-3 mb-2">
-                                                <div className="flex justify-between text-sm mb-1">
-                                                    <span className="font-medium">{reply.admin_name}</span>
-                                                    <span className="text-charcoal/60">
-                                                        {new Date(reply.created_at).toLocaleDateString()}
-                                                    </span>
-                                                </div>
-                                                <p className="text-sm text-charcoal/80">{reply.message}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </motion.div>
-                        ))
-                    ) : (
-                        events[activeTab].map((event, index) => (
-                            <motion.div
-                                key={event.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
+                    {/* Main Content */}
+                    <div className="space-y-6">
+                        {/* Stats Section */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <StatCard
+                                title="Approved Events"
+                                value={stats.approvedEvents}
+                                color="text-green-600"
+                            />
+                            <StatCard
+                                title="Pending Requests"
+                                value={stats.pendingRequests}
+                                color="text-yellow-600"
+                            />
+                            <StatCard
+                                title="Denied Requests"
+                                value={stats.deniedRequests}
+                                color="text-red-600"
+                            />
+                        </div>
+
+                    {/* Updated Tabs */}
+                    <div className="flex gap-4 mb-6">
+                        {['pending', 'approved', 'denied', 'messages'].map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={`px-4 py-2 rounded-lg capitalize transition
+                                    ${activeTab === tab
+                                        ? 'bg-midnight text-gold'
+                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                             >
-                                <EventCard
-                                    event={event}
-                                    onStatusChange={fetchDashboardData}
-                                    showDetails={() => {
-                                        // Add your event details modal/page navigation logic here
-                                        console.log('Show event details:', event.id);
-                                    }}
-                                />
-                            </motion.div>
-                        ))
-                    )}
-                </motion.div>
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
+
+                        {/* Messages Section */}
+                        <AnimatePresence>
+                            {isInboxOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+                                >
+                                    <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h2 className="text-xl font-bold">Message Inbox</h2>
+                                            <button
+                                                onClick={() => setIsInboxOpen(false)}
+                                                className="text-gray-500 hover:text-gray-700"
+                                            >
+                                                Close
+                                            </button>
+                                        </div>
+
+                                        <MessageFilters
+                                            onFilterChange={setMessageFilter}
+                                            onSearchChange={setSearchTerm}
+                                            currentFilter={messageFilter}
+                                            searchTerm={searchTerm}
+                                        />
+
+                                        <div className="space-y-4 mt-4">
+                                            {filteredMessages.map(message => (
+                                                <MessageThread
+                                                    key={message.id}
+                                                    message={message}
+                                                    replies={message.admin_reply ? [{
+                                                        id: `reply-${message.id}`,
+                                                        content: message.admin_reply,
+                                                        created_at: message.replied_at
+                                                    }] : []}
+                                                    onReply={(messageId) => setShowReplyForm(messageId)}
+                                                />
+                                            ))}
+                                        </div>
+
+                                        {showReplyForm && (
+                                            <MessageHandler
+                                                messageId={showReplyForm}
+                                                onSubmit={handleReplySubmit}
+                                                type="reply"
+                                                onCancel={() => setShowReplyForm(null)}
+                                            />
+                                        )}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                </>
             )}
+
+            {/* Notification */}
+            <AnimatePresence>
+                {notification.show && (
+                    <MessageNotification
+                        message={notification.message}
+                        onClose={() => setNotification({ show: false, message: '' })}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 }

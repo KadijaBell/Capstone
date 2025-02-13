@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
-from app.models import  Event,User,Service,Agency, db
+from app.models import  Event,User,Service,Agency, db, ContactSubmission
 from flask_login import current_user, login_required
 from datetime import datetime
+from flask_cors import cross_origin
 
 event_routes = Blueprint('events', __name__)
 
@@ -48,67 +49,82 @@ def get_user_events():
     return {'events': [event.to_dict() for event in user_events]}
 
 
-@event_routes.route('/public-approved', methods=['GET'])
-def get_approved_public_events():
+@event_routes.route('/public', methods=['GET'])
+def get_public_events():
     """
-    Get all approved events - public route
+    Get all approved public events
     """
     try:
         events = Event.query.filter_by(status='approved').all()
-        return jsonify({
-            'events': [event.to_dict() for event in events]
-        })
+        return jsonify({'events': [event.to_dict() for event in events]}), 200
     except Exception as e:
-        print(f"Error fetching public events: {str(e)}")
-        return jsonify({
-            'error': 'Failed to fetch events',
-            'details': str(e)
-        }), 500
+        return {'error': f'Error retrieving events: {str(e)}'}, 500
 
+
+@event_routes.route('/<int:id>', methods=['GET'])
+def get_event(id):
+    """
+    Get a specific event by id
+    """
+    try:
+        event = Event.query.get(id)
+        if not event:
+            return jsonify({'error': 'Event not found'}), 404
+        return jsonify({'event': event.to_dict()}), 200
+    except Exception as e:
+        return jsonify({'error': f'Error retrieving event: {str(e)}'}), 500
 
 #POST
 @event_routes.route('/', methods=['POST'])
 @login_required
 def create_event():
     """
-    Create a new event request.
+    Create a new event or service request
     """
-    if current_user.role != 'user':
-        return {'error': 'Unauthorized'}, 403
-
     try:
-        data = request.get_json()
-        print("Received data:", data)
+        # Debug logging
+        print("Current user:", current_user, current_user.is_authenticated)
 
-        # Convert date string to datetime object
-        event_date = None
-        if data.get('date'):
-            try:
-                event_date = datetime.strptime(data.get('date'), '%Y-%m-%d')
-            except ValueError as e:
-                return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
+        if not current_user.is_authenticated:
+            return {"error": "User not authenticated"}, 401
+
+        data = request.get_json()
+        print("Received event data:", data)
 
         new_event = Event(
             title=data.get('title'),
-            description=data.get('description'),
-            type=data.get('type'),
-            client_id=current_user.id,
             organization=data.get('organization'),
             location=data.get('location'),
-            date=event_date,
+            date=datetime.strptime(data.get('date'), '%Y-%m-%d') if data.get('date') else None,
+            description=data.get('description'),
+            type=data.get('type', 'event'),  # Default to 'event' if not specified
             status='pending',
+            client_id=current_user.id,
+            event_type=data.get('eventType'),
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow()
         )
 
+        print("New event object:", {
+            'title': new_event.title,
+            'client_id': new_event.client_id,
+            'status': new_event.status,
+            'type': new_event.type
+        })
+
         db.session.add(new_event)
         db.session.commit()
-        return jsonify(new_event.to_dict()), 201
+
+        # Return the created event and updated metrics
+        return {
+            'event': new_event.to_dict(),
+            'message': 'Event created successfully'
+        }, 201
 
     except Exception as e:
+        print("Error creating event:", str(e))
         db.session.rollback()
-        print(f"Error creating event: {str(e)}")
-        return jsonify({'error': str(e)}), 400
+        return {"error": str(e)}, 500
 
 @event_routes.route('/event-requests', methods=['POST'])
 def create_event_request():
@@ -125,8 +141,6 @@ def create_event_request():
             status='pending',
             organization=data.get('organization'),
             location=data.get('location'),
-            date=data.get('date'),
-            client_id=current_user.id
         )
 
         db.session.add(new_event)
@@ -189,34 +203,34 @@ def delete_event(id):
 #Dashboard
 @event_routes.route('/dashboard', methods=['GET'])
 @login_required
-def user_dashboard():
-    """
-    Dashboard route for users to see their events and metrics
-    """
+def get_dashboard():
     try:
-        if current_user.role != 'user':
-            return jsonify({'error': 'Unauthorized access'}), 403
+        print("Fetching dashboard for user:", current_user.id)  # Debug log
 
-        # Get user's events
-        user_events = Event.query.filter_by(client_id=current_user.id).all()
+        # Get events for the current user
+        events = Event.query.filter_by(client_id=current_user.id).all()
+
+        print("Found events:", [e.to_dict() for e in events])  # Debug log
 
         # Calculate metrics
-        total_events = len(user_events)
-        pending_events = sum(1 for event in user_events if event.status == 'pending')
-        approved_events = sum(1 for event in user_events if event.status == 'approved')
-        rejected_events = sum(1 for event in user_events if event.status == 'rejected')
+        total = len(events)
+        pending = sum(1 for e in events if e.status == 'pending')
+        approved = sum(1 for e in events if e.status == 'approved')
+        denied = sum(1 for e in events if e.status == 'denied')
 
-        return jsonify({
-            "role": "user",
-            "dashboard_data": {
-                "total_events": total_events,
-                "pending_events": pending_events,
-                "approved_events": approved_events,
-                "rejected_events": rejected_events,
-            },
-            "events": [event.to_dict() for event in user_events]
-        }), 200
+        response_data = {
+            "events": [e.to_dict() for e in events],
+            "metrics": {
+                "total": total,
+                "pending": pending,
+                "approved": approved,
+                "denied": denied
+            }
+        }
+
+        print("Sending dashboard data:", response_data)  # Debug log
+        return response_data
 
     except Exception as e:
-        print(f"Dashboard error: {str(e)}")
-        return jsonify({"error": "Internal server error"}), 500
+        print("Dashboard Error:", str(e))
+        return {"error": str(e)}, 500
