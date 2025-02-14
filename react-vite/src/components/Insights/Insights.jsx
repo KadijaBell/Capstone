@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
+import PixelCard from "../PixelCard/PixelCard";
 
 const images = [
   "/assets/capstone-image-1.jpg",
@@ -143,7 +144,7 @@ const Insights = () => {
             </AnimatePresence>
           </div>
 
-          {/* Metrics Section remains exactly as-is */}
+          {/* Metrics Section with Pixel Card Effect */}
           <motion.div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-6 lg:gap-10"
             initial="hidden"
@@ -155,31 +156,40 @@ const Insights = () => {
             }}
           >
             {metrics.map((metric, index) => (
-              <motion.div
+              <PixelCard
                 key={index}
+                variant="yellow" // or "blue", "yellow", "pink", etc.
+                // Pass the original card styles so the content looks exactly as before
                 className="relative p-4 bg-gray-200/30 rounded-md h-36 w-[110%] flex flex-col justify-center items-center text-center overflow-hidden group"
-                variants={{
-                  hidden: { opacity: 0, y: 30 },
-                  visible: { opacity: 1, y: 0, transition: { duration: 0.8 } },
-                }}
-                whileHover={{ scale: 1.1, translateZ: 20 }}
-                transition={{ type: "spring", stiffness: 200, damping: 10 }}
+                gap={4.7}
+                speed={50}
               >
-                {/* Shine effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:translate-x-full group-hover:rotate-12"></div>
-
-                <span className="block font-semibold text-2xl text-mint dark:text-mint">
-                  {metric.value}
-                </span>
-                <h2 className="mt-1 font-medium text-gray-800 dark:text-gray-900">
-                  {metric.title}
-                </h2>
-                <p className="mt-1 text-gray-700 text-sm">
-                  Lorem ipsum dolor sit amet.
-                </p>
-              </motion.div>
+                <motion.div
+                  variants={{
+                    hidden: { opacity: 0, y: 30 },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      transition: { duration: 0.8 },
+                    },
+                  }}
+                  whileHover={{ scale: 1.1, translateZ: 20 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 10 }}
+                >
+                  <span className="block font-semibold text-2xl text-mint dark:text-mint">
+                    {metric.value}
+                  </span>
+                  <h2 className="mt-1 font-medium text-gray-800 dark:text-black-900">
+                    {metric.title}
+                  </h2>
+                  <p className="mt-1 text-700 text-sm text-gray-800 dark:text-black-900">
+                    Lorem ipsum dolor sit amet.
+                  </p>
+                </motion.div>
+              </PixelCard>
             ))}
           </motion.div>
+
           {/* "Get in touch" button removed */}
         </div>
       </motion.div>
