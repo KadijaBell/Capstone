@@ -1,6 +1,7 @@
 import Masonry from "react-responsive-masonry";
 import { motion } from "framer-motion";
 import BlurText from "../BlurText/BlurText";
+import ShinyText from "../ShinyText/ShinyText";
 
 const images = [
   "/assets/capstone-image-1.jpg",
@@ -37,15 +38,17 @@ const HeroSection = () => {
                 direction="top"
               />{" "}
               {/* Second part with special styling */}
-              <span className="bg-charcoal dark:bg-black dark:text-gold inline-block border border-dashed border-gold px-3">
-                <BlurText
-                  text="Calif Pierre"
-                  className="text-ivory dark:text-gold text-4xl sm:text-6xl lg:text-5xl xl:text-6xl inline-block text- italic"
-                  delay={150}
-                  animateBy="words"
-                  direction="top"
-                />
-              </span>
+              <ShinyText className="text-ivory dark:text-gold text-4xl sm:text-6xl lg:text-5xl xl:text-6xl inline-block text-italic">
+                <span className="bg-charcoal dark:bg-black dark:text-gold inline-block border border-dashed border-gold px-3 padding-y-5">
+                  <BlurText
+                    text="Calif Pierre"
+                    className="text-ivory dark:text-gold text-4xl sm:text-6xl lg:text-5xl xl:text-6xl inline-block text-italic"
+                    delay={150}
+                    animateBy="words"
+                    direction="top"
+                  />
+                </span>
+              </ShinyText>
             </h1>
 
             {/* Hero Paragraph with Animated Blur Effect */}

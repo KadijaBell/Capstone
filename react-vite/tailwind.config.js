@@ -14,19 +14,12 @@ module.exports = {
         black: "#000000",
       },
       animation: {
-        shine: "shine 1.5s infinite", // Add the shine animation
+        shine: "shine 5s linear infinite", // Using only the new shine animation
       },
       keyframes: {
         shine: {
-          "0%": {
-            backgroundPosition: "-100% 0",
-          },
-          "50%": {
-            backgroundPosition: "100% 0",
-          },
-          "100%": {
-            backgroundPosition: "100% 0",
-          },
+          "0%": { backgroundPosition: "100%" },
+          "100%": { backgroundPosition: "-100%" },
         },
       },
     },
