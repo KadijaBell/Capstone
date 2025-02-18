@@ -32,7 +32,7 @@ const HeroSection = () => {
               {/* First part of the heading */}
               <BlurText
                 text="Build Your Online Platform with the best Digital Agency"
-                className="text-ivory dark:text-black text-4xl sm:text-6xl lg:text-5xl xl:text-6xl inline-block"
+                className="text-ivory dark:text-black text-4xl sm:text-6xl lg:text-5xl xl:text-6xl inline-block mb-6"
                 delay={150}
                 animateBy="words"
                 direction="top"
