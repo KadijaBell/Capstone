@@ -1,213 +1,91 @@
 import { motion } from "framer-motion";
 
 function FillerCarousel() {
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.3 }
-    }
-  };
-
-  const cardVariants = {
-    offscreen: {
-      y: 20,
-      opacity: 0
-    },
-    onscreen: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: "spring",
-        bounce: 0.2,
-        duration: 0.8
-      }
-    }
-  };
-
-  const hoverVariants = {
-    rest: {
-      scale: 1,
-      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
-    },
-    hover: {
-      scale: 1.02,
-      boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-      transition: {
-        type: "spring",
-        stiffness: 300,
-        damping: 20
-      }
-    }
-  };
-
-  // Data
-  const services = [
+  const sections = [
     {
-      title: "Celebrity Engagement",
-      description: "Building authentic connections with audiences through strategic partnerships."
+      title: "Who We Are",
+      items: [
+        { title: "Our Mission", description: "Focusing on Celebrity, Community, and Collection to create cultural impact." },
+        { title: "Our Approach", description: "Unique activation concepts and data collection initiatives that drive real results." },
+        { title: "Our Focus", description: "Creating sustainability in entertainment markets through innovative solutions." }
+      ]
     },
     {
-      title: "Community Activation",
-      description: "Creating lasting consumer loyalty through meaningful engagement strategies."
+      title: "Our Services",
+      items: [
+        { title: "Celebrity Engagement", description: "Building authentic connections with audiences through strategic partnerships." },
+        { title: "Community Activation", description: "Creating lasting consumer loyalty through meaningful engagement strategies." },
+        { title: "Data-Driven Insights", description: "Delivering accurate consumer engagement reports for informed decision making." }
+      ]
     },
     {
-      title: "Data-Driven Insights",
-      description: "Delivering accurate consumer engagement reports for informed decision making."
-    }
-  ];
-
-  const testimonials = [
-    {
-      quote: "Calif Pierre made our dream event a reality!",
-      author: "Sarah & James"
-    },
-    {
-      quote: "Professional and attentive team with top-notch services and really cares about the community.",
-      author: "Emily T."
+      title: "What Our Clients Say",
+      items: [
+        { title: "Sarah & James", description: "Calif Pierre made our dream event a reality!" },
+        { title: "Emily T.", description: "Professional and attentive team with top-notch services and really cares about the community." }
+      ]
     }
   ];
 
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="bg-gradient-to-b from-midnight/5 via-midnight/10 to-midnight/5"
-    >
-      {/* About Section */}
-      <section className="max-w-7xl mx-auto py-20 px-6">
-        <motion.h2
-          className="text-4xl font-bold mb-12 text-center text-midnight"
-          whileHover={{ scale: 1.02 }}
-        >
-          Who We Are
-          <div className="h-1 w-24 bg-gold mx-auto mt-4 rounded-full"></div>
-        </motion.h2>
-
-        <motion.div
-          className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16"
-          variants={cardVariants}
-        >
-          <motion.div
-            variants={hoverVariants}
-            initial="rest"
-            whileHover="hover"
-            whileTap={{ scale: 0.98 }}
-            className="bg-white/80 backdrop-blur-sm p-8 rounded-lg cursor-pointer transform-gpu"
+    <div className="bg-midnight text-ivory py-20">
+      {sections.map((section, sectionIndex) => (
+        <div key={sectionIndex} className="max-w-7xl mx-auto px-6 mb-32 last:mb-0">
+          <div className={`grid ${
+            section.title === "What Our Clients Say"
+              ? "md:grid-cols-2 max-w-5xl"
+              : "md:grid-cols-3"
+            } gap-8 mx-auto`}
           >
-            <h3 className="text-xl font-semibold mb-4 text-midnight">Our Mission</h3>
-            <p className="text-charcoal/80">
-              Calif Pierre is a solutions company focusing on Celebrity, Community,
-              and Collection to create cultural impact.
-            </p>
-          </motion.div>
-
-          <motion.div
-            variants={hoverVariants}
-            initial="rest"
-            whileHover="hover"
-            whileTap={{ scale: 0.98 }}
-            className="bg-white/80 backdrop-blur-sm p-8 rounded-lg cursor-pointer transform-gpu"
-          >
-            <h3 className="text-xl font-semibold mb-4 text-midnight">Our Approach</h3>
-            <p className="text-charcoal/80">
-              Unique activation concepts and data collection initiatives that drive real results.
-            </p>
-          </motion.div>
-
-          <motion.div
-            variants={hoverVariants}
-            initial="rest"
-            whileHover="hover"
-            whileTap={{ scale: 0.98 }}
-            className="bg-white/80 backdrop-blur-sm p-8 rounded-lg cursor-pointer transform-gpu"
-          >
-            <h3 className="text-xl font-semibold mb-4 text-midnight">Our Focus</h3>
-            <p className="text-charcoal/80">
-              Creating sustainability in entertainment markets through innovative solutions.
-            </p>
-          </motion.div>
-        </motion.div>
-
-        {/* Services Section */}
-        <motion.h2
-          className="text-4xl font-bold mb-12 text-center text-midnight pt-16"
-          whileHover={{ scale: 1.02 }}
-        >
-          Our Services
-          <div className="h-1 w-24 bg-gold mx-auto mt-4 rounded-full"></div>
-        </motion.h2>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {services.map((service, index) => (
-            <motion.div
-              key={index}
-              initial="offscreen"
-              whileInView="onscreen"
-              whileHover="hover"
-              variants={{
-                ...cardVariants,
-                hover: {
-                  scale: 1.02,
-                  borderColor: 'rgba(203, 161, 53, 0.4)',
-                  transition: {
-                    type: "spring",
-                    stiffness: 300,
-                    damping: 20
-                  }
-                }
-              }}
-              viewport={{ once: true, amount: 0.3 }}
-              className="bg-midnight/90 backdrop-blur-sm border border-gold/20 rounded-lg p-8 text-ivory cursor-pointer transform-gpu"
-            >
-              <h3 className="text-xl font-bold mb-4">{service.title}</h3>
-              <p className="text-ivory/80">{service.description}</p>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Testimonials */}
-        <motion.div className="mt-24">
-          <motion.h2
-            className="text-4xl font-bold mb-12 text-center text-midnight"
-            whileHover={{ scale: 1.02 }}
-          >
-            What Our Clients Say
-            <div className="h-1 w-24 bg-gold mx-auto mt-4 rounded-full"></div>
-          </motion.h2>
-
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {testimonials.map((testimonial, index) => (
-              <motion.blockquote
+            {section.items.map((item, index) => (
+              <motion.div
                 key={index}
-                initial="offscreen"
-                whileInView="onscreen"
-                whileHover="hover"
-                variants={{
-                  ...cardVariants,
-                  hover: {
-                    scale: 1.02,
-                    boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
-                    transition: {
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 20
-                    }
-                  }
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                whileHover={{
+                  scale: 1.02,
+                  backgroundColor: "rgba(255, 255, 255, 0.08)",
                 }}
-                viewport={{ once: true, amount: 0.3 }}
-                className="bg-white/80 backdrop-blur-sm p-8 rounded-lg cursor-pointer transform-gpu"
+                className="group relative overflow-hidden rounded-lg p-6 transition-all duration-300 bg-white/5 backdrop-blur-sm hover:shadow-lg"
               >
-                <p className="text-charcoal/80 italic">&quot;{testimonial.quote}&quot;</p>
-                <footer className="mt-4 text-midnight font-semibold">- {testimonial.author}</footer>
-              </motion.blockquote>
+                <div className="relative z-10">
+                  <h3 className="text-gold text-lg font-medium mb-3
+                    group-hover:translate-x-1 transition-transform duration-300">
+                    {item.title}
+                  </h3>
+                  <p className="text-ivory/80 text-sm leading-relaxed mb-4
+                    group-hover:translate-x-1 transition-transform duration-300 delay-75">
+                    {item.description}
+                  </p>
+                </div>
+
+                {/* Gradient Border Effect */}
+                <motion.div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100
+                    transition-opacity duration-300"
+                  initial={false}
+                  animate={{
+                    background: [
+                      "linear-gradient(45deg, rgba(203, 161, 53, 0) 0%, rgba(203, 161, 53, 0.1) 100%)",
+                      "linear-gradient(45deg, rgba(203, 161, 53, 0.1) 0%, rgba(203, 161, 53, 0.2) 100%)"
+                    ]
+                  }}
+                  transition={{ duration: 0.3 }}
+                />
+
+                {/* Bottom Highlight */}
+                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r
+                  from-transparent via-gold/50 to-transparent
+                  scale-x-0 group-hover:scale-x-100
+                  transition-transform duration-300"
+                />
+              </motion.div>
             ))}
           </div>
-        </motion.div>
-      </section>
-    </motion.div>
+        </div>
+      ))}
+    </div>
   );
 }
 

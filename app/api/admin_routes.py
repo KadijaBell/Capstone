@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.models import Event, User, Service, Agency,Metric, ContactSubmission, Notification, db
+from app.models import Event, User, Service, Agency,Metric, ContactSubmission, Notification, Message, db
 from flask_login import current_user, login_required
 from datetime import datetime
 
@@ -71,6 +71,44 @@ def get_metrics():
     metrics = Metric.query.all()
     return jsonify([metric.to_dict() for metric in metrics]),200
 
+
+@admin_routes.route('/messages/thread/<int:thread_id>', methods=['GET'])
+@login_required
+def get_message_thread(thread_id):
+    """Get all messages in a thread"""
+    try:
+        thread_messages = Message.query.filter(
+            (Message.id == thread_id) |
+            (Message.thread_id == thread_id)
+        ).order_by(Message.created_at).all()
+
+        if not thread_messages:
+            return jsonify({'error': 'Thread not found'}), 404
+
+        return jsonify([msg.to_dict() for msg in thread_messages]), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@admin_routes.route('/users', methods=['GET'])
+@login_required
+def get_users():
+    """Get all users for messaging"""
+    try:
+        if current_user.role != 'admin':
+            return jsonify({'error': 'Unauthorized'}), 403
+
+        users = User.query.all()
+        return jsonify({
+            'users': [{
+                'id': user.id,
+                'email': user.email,
+                'username': user.username
+            } for user in users]
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 #POST
 @admin_routes.route('/contact', methods=['POST'])
 @login_required
@@ -115,32 +153,44 @@ def submit_contact():
 @admin_routes.route('/messages/<int:message_id>/reply', methods=['POST'])
 @login_required
 def reply_to_message(message_id):
-    """
-    Handle admin replies to contact submissions
-    """
-    if current_user.role != 'admin':
-        return jsonify({'error': 'Unauthorized'}), 403
-
+    """Reply to a message and create a thread"""
     try:
         data = request.get_json()
-        message = data.get('message')
+        original_message = Message.query.get(message_id)
 
-        # Find the contact submission
-        submission = ContactSubmission.query.get_or_404(message_id)
+        if not original_message:
+            return jsonify({'error': 'Message not found'}), 404
 
-        # Update the submission status and add reply
-        submission.status = 'replied'
-        submission.admin_reply = message
-        submission.replied_at = datetime.utcnow()
-        submission.replied_by = current_user.id
+        # Create the reply message
+        reply = Message(
+            content=data.get('content'),
+            sender_id=current_user.id,
+            event_id=original_message.event_id,
+            is_admin_message=True,
+            status='read'
+        )
 
+        # If this is the first reply, set up the thread
+        if not original_message.thread_id:
+            original_message.thread_id = original_message.id
+            reply.thread_id = original_message.id
+        else:
+            reply.thread_id = original_message.thread_id
+
+        # Set the parent-child relationship
+        reply.parent_id = message_id
+
+        # Update original message status
+        original_message.status = 'read'
+        original_message.replied_at = datetime.utcnow()
+
+        db.session.add(reply)
         db.session.commit()
 
-        return jsonify({'message': 'Reply sent successfully'}), 200
-
+        return jsonify(original_message.to_dict()), 200
     except Exception as e:
-        print(f"Error in reply_to_message: {str(e)}")
-        return jsonify({'error': 'Failed to send reply'}), 500
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @admin_routes.route('/events/<int:event_id>/message', methods=['POST'])
 @login_required
@@ -170,6 +220,29 @@ def send_message(event_id):
 
     return jsonify(new_notification.to_dict()), 201
 
+@admin_routes.route('/messages', methods=['POST'])
+@login_required
+def create_message():
+    """Create a new message"""
+    try:
+        data = request.get_json()
+
+        message = Message(
+            content=data.get('content'),
+            sender_id=current_user.id,
+            event_id=data.get('event_id'),
+            recipient_id=data.get('user_id'),
+            is_admin_message=True,
+            status='read'
+        )
+
+        db.session.add(message)
+        db.session.commit()
+        return jsonify(message.to_dict()), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 #PUT/PATCH
 @admin_routes.route('/events/<int:id>', methods=['PUT'])
 @login_required
@@ -187,29 +260,87 @@ def update_event(id):
         db.session.commit()
     return jsonify(event.to_dict())
 
-@admin_routes.route('/events/<int:event_id>/approve', methods=['PATCH'])
+@admin_routes.route('/events/<int:event_id>/status', methods=['PATCH'])
 @login_required
-def approve_event(event_id):
-    if current_user.role != 'admin':
-        return jsonify({'error': 'Unauthorized access'}), 403
-    event = Event.query.get(event_id)
-    if not event:
-        return jsonify({'error': 'Event not found'}), 404
-    event.status = 'approved'
-    db.session.commit()
-    return event.to_dict()
+def update_event_status(event_id):
+    try:
+        event = Event.query.get(event_id)
+        if not event:
+            return jsonify({'error': 'Event not found'}), 404
 
-@admin_routes.route('/events/<int:event_id>/reject', methods=['PATCH'])
+        data = request.get_json()
+        new_status = data.get('status')
+        message = data.get('message')  # Denial reason or approval message
+
+        event.status = new_status
+        if new_status == 'denied':
+            event.denial_reason = message
+
+            # Create notification for user
+            notification = Notification(
+                user_id=event.client_id,
+                type='event_denied',
+                content=f'Your event "{event.title}" was denied. Reason: {message if message else "No reason provided"}',
+                related_id=event_id
+            )
+            db.session.add(notification)
+        elif new_status == 'approved':
+            # Create notification for user
+            notification = Notification(
+                user_id=event.client_id,
+                type='event_approved',
+                content=f'Your event "{event.title}" has been approved!',
+                related_id=event_id
+            )
+            db.session.add(notification)
+
+        db.session.commit()
+        return jsonify(event.to_dict()), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@admin_routes.route('/messages/<int:message_id>/status', methods=['PATCH'])
 @login_required
-def reject_event(event_id):
-    if current_user.role != 'admin':
-        return jsonify({'error': 'Unauthorized access'}), 403
-    event = Event.query.get(event_id)
-    if not event:
-        return jsonify({'error': 'Event not found'}), 404
-    event.status = 'denied'
-    db.session.commit()
-    return event.to_dict()
+def update_message_status(message_id):
+    """Update message status (read/unread/archived)"""
+    try:
+        message = Message.query.get(message_id)
+        if not message:
+            return jsonify({'error': 'Message not found'}), 404
+
+        data = request.get_json()
+        new_status = data.get('status')
+
+        if new_status not in ['unread', 'read', 'archived']:
+            return jsonify({'error': 'Invalid status'}), 400
+
+        message.status = new_status
+        db.session.commit()
+
+        return jsonify(message.to_dict()), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@admin_routes.route('/messages/<int:message_id>', methods=['PUT'])
+@login_required
+def edit_message(message_id):
+    """Edit a message"""
+    try:
+        message = Message.query.get(message_id)
+        if not message:
+            return jsonify({'error': 'Message not found'}), 404
+
+        data = request.get_json()
+        message.content = data.get('content', message.content)
+        message.updated_at = datetime.utcnow()
+
+        db.session.commit()
+        return jsonify(message.to_dict()), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 
 
 #DELETE
@@ -227,6 +358,23 @@ def delete_event(id):
     db.session.commit()
     return jsonify({'message': 'Event deleted successfully'})
 
+@admin_routes.route('/messages/<int:message_id>', methods=['DELETE'])
+@login_required
+def delete_message(message_id):
+    """Delete a message and its thread"""
+    try:
+        message = Message.query.get(message_id)
+        if not message:
+            return jsonify({'error': 'Message not found'}), 404
+
+        # The cascade will handle deleting related messages
+        db.session.delete(message)
+        db.session.commit()
+
+        return jsonify({'message': 'Message deleted successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 #Dashboard
 @admin_routes.route('/dashboard', methods=['GET'])

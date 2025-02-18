@@ -31,6 +31,17 @@ class User(db.Model, UserMixin):
         foreign_keys='ContactSubmission.created_by',
         backref='creator'
     )
+    sent_messages = db.relationship(
+        'Message',
+        foreign_keys='Message.sender_id',
+        back_populates='sender',
+        cascade="all, delete-orphan"
+    )
+    received_messages = db.relationship(
+        'Message',
+        foreign_keys='Message.recipient_id',
+        back_populates='recipient'
+    )
 
     @property
     def password(self):

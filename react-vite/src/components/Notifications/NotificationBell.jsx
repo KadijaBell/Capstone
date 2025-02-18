@@ -1,10 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNotifications } from '../../hooks/useNotifications';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function NotificationBell() {
     const { notifications, unreadCount, markAsRead } = useNotifications();
     const [showDropdown, setShowDropdown] = useState(false);
+
+    useEffect(() => {
+        if (!showDropdown) return;
+
+        const closeDropdown = (e) => {
+            if (!e.target.closest('.notification-dropdown')) {
+                setShowDropdown(false);
+            }
+        };
+
+        document.addEventListener('click', closeDropdown);
+        return () => document.removeEventListener('click', closeDropdown);
+    }, [showDropdown]);
 
     return (
         <div className="relative z-50">

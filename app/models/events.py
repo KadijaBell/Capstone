@@ -20,13 +20,16 @@ class Event(db.Model):
     event_type = db.Column(db.String(50), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    denial_reason = db.Column(db.Text)
+
+
 
     agency = db.relationship("Agency", back_populates="events")
     service = db.relationship("Service", back_populates="events")
     client = db.relationship("User", back_populates="events")
     notifications = db.relationship("Notification",back_populates="event",cascade="all, delete-orphan")
     contact_submissions = db.relationship('ContactSubmission', back_populates='event', cascade='all, delete-orphan')
-
+    messages = db.relationship('Message', back_populates='event', cascade='all, delete-orphan')
 
     def to_dict(self):
         return {
@@ -44,5 +47,7 @@ class Event(db.Model):
             'created_at': self.created_at,
             'updated_at': self.updated_at,
             'service_type': self.service_type,
-            'event_type': self.event_type
+            'event_type': self.event_type,
+            'denial_reason': self.denial_reason,
+            'messages': [message.to_dict() for message in self.messages]
         }

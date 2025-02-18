@@ -95,7 +95,7 @@ function UserDashboard() {
     // Add ESC key handler for modal
     useEffect(() => {
         const handleEsc = (event) => {
-            if (event.keyCode === 27) {  // ESC key
+            if (event.keyCode === 27) {
                 setShowContactAdmin(false);
             }
         };
@@ -357,7 +357,7 @@ function UserDashboard() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-ivory to-blush">
+        <div className="min-h-screen bg-gradient-to-br from-ivory to-blush pt-20">
             {/* Modern Header Section */}
             <div className="p-8 bg-white/80 backdrop-blur-sm shadow-sm">
                 <div className="max-w-7xl mx-auto">

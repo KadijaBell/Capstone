@@ -1,13 +1,13 @@
 import HeroSection from "../components/HeroSection/HeroSection"
 import FillerCarousel from "../components/InformationSection/FillerCarousel";
 import OpenModalButton from "../components/OpenModalButton/OpenModalButton";
-import SignUpFormModal from "../components/SignUpFormModal/SignUpFormModal";
+import SignUpFormModal from "../components/SignupFormModal/SignupFormModal";
 
 function LandingPage() {
   return (
     <div className="bg-midnight text-charcoal">
       <HeroSection
-        title="Welcome to Calif Pierre"
+        // title="Welcome to Calif Pierre"
         subtitle="A solutions company rooted in cultural impact. Effortlessly manage events and connect with your community."
         primaryButtonComponent={
           <OpenModalButton
