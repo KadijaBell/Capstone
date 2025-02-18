@@ -89,7 +89,7 @@ function CommunityPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className="max-w-7xl mx-auto px-4 py-12"
+      className="max-w-7xl mx-auto px-4 py-12 pt-20"
     >
       {/* Vision Section */}
       <section className="text-center max-w-4xl mx-auto mb-16">
@@ -114,7 +114,7 @@ function CommunityPage() {
       </section>
 
       {/* Featured Events Section */}
-      <section className="mb-16">
+      <section className="mb-16 pt-20">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold text-midnight">Featured Events</h2>
           <div className="flex gap-4">

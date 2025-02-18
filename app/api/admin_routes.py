@@ -72,22 +72,25 @@ def get_metrics():
     return jsonify([metric.to_dict() for metric in metrics]),200
 
 
-@admin_routes.route('/messages/thread/<int:thread_id>', methods=['GET'])
+@admin_routes.route('/messages/thread/<int:message_id>', methods=['GET'])
 @login_required
-def get_message_thread(thread_id):
-    """Get all messages in a thread"""
-    try:
-        thread_messages = Message.query.filter(
-            (Message.id == thread_id) |
-            (Message.thread_id == thread_id)
-        ).order_by(Message.created_at).all()
+def get_thread(message_id):
+    """
+    Retrieve a 'thread' by message_id.
+    This can be done by an approach such as:
+    - all messages with the same event_id
+    - or all messages with the same 'parent_id'
+    Modify logic to your preference.
+    """
+    if current_user.role != 'admin':
+        return {'error': 'Unauthorized'}, 403
 
-        if not thread_messages:
-            return jsonify({'error': 'Thread not found'}), 404
+    parent_message = Message.query.get_or_404(message_id)
+    # For simplicity, let's assume a thread is all messages that share the same event_id:
+    thread_messages = Message.query.filter_by(event_id=parent_message.event_id).all()
 
-        return jsonify([msg.to_dict() for msg in thread_messages]), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    return jsonify([m.to_dict() for m in thread_messages]), 200
+
 
 @admin_routes.route('/users', methods=['GET'])
 @login_required
@@ -224,6 +227,10 @@ def send_message(event_id):
 @login_required
 def create_message():
     """Create a new message"""
+
+
+    if current_user.role != 'admin':
+        return {'error': 'Unauthorized'}, 403
     try:
         data = request.get_json()
 
@@ -397,6 +404,7 @@ def admin_dashboard():
         total_services = Service.query.count()
         events = Event.query.all()
         pending_events_list = Event.query.filter(Event.status == 'pending').all()
+        messages = Message.query.all()
 
     return {
             "role": "admin",
@@ -405,7 +413,8 @@ def admin_dashboard():
                 "pending_events": pending_events,
                 "users_count": users_count,
                 "total_services": total_services,
+                "messages": [message.to_dict() for message in messages]
             },
             "pending_events": [event.to_dict() for event in pending_events_list],
             "events": [event.to_dict() for event in events],
-        }
+        }, 200
