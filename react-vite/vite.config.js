@@ -11,6 +11,9 @@ export default defineConfig((mode) => ({
       failOnError: mode === "production",
     }),
   ],
+  css: {
+    postcss: "./postcss.config.js", // This line ensures that PostCSS config is being used.
+  },
   server: {
     open: true,
     proxy: {
