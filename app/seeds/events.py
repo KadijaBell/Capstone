@@ -1,6 +1,8 @@
-from app.models import db, Event, environment, SCHEMA
+from app.models import db, Event, environment, SCHEMA, EventStatus
 from sqlalchemy.sql import text
 from datetime import datetime
+
+
 
 
 def seed_events():
@@ -11,7 +13,7 @@ def seed_events():
         date=None,
         description="A casual networking event for professionals.",
         type="community",
-        status="active",
+        status=EventStatus.ACTIVE,
         agency_id=1,
         client_id=2,
         service_id=1,
@@ -27,7 +29,7 @@ def seed_events():
         date=None,
         description="A formal charity event to raise funds for local causes.",
         type="community",
-        status="pending",
+        status=EventStatus.PENDING,
         agency_id=2,
         client_id=3,
         service_id=2,
@@ -43,7 +45,7 @@ def seed_events():
         date=None,
         description="A campaign to promote sustainable practices.",
         type="data",
-        status="approved",
+        status=EventStatus.APPROVED,
         agency_id=3,
         client_id=4,
         service_id=3,
@@ -58,8 +60,8 @@ def seed_events():
         location=None,
         date=None,
         description="A campaign to promote  practices.",
-        type="influencer",  
-        status="approved",
+        type="influencer",
+        status=EventStatus.APPROVED,
         agency_id=3,
         client_id=4,
         service_id=3,
@@ -70,7 +72,7 @@ def seed_events():
         title=" Awareness Campaign",
         description="A campaign to promote  practices.",
         type="cause",
-        status="resolved",
+        status=EventStatus.RESOLVED,
         client_id=4,
         service_id=3,
         agency_id=3
@@ -83,5 +85,8 @@ def seed_events():
     db.session.commit()
 
 def undo_events():
-    db.session.execute('DELETE FROM events')
+    if environment == "production":
+        db.session.execute(f"TRUNCATE table {SCHEMA}.events RESTART IDENTITY CASCADE;")
+    else:
+        db.session.execute(text("DELETE FROM events"))
     db.session.commit()
