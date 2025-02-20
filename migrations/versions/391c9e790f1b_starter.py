@@ -1,21 +1,16 @@
 """starter
 
-Revision ID: c25691bcf810
-Revises:
-Create Date: 2025-02-19 23:29:49.744582
+Revision ID: 391c9e790f1b
+Revises: 
+Create Date: 2025-02-20 00:01:13.993357
 
 """
 from alembic import op
 import sqlalchemy as sa
-import os
-
-environment = os.getenv("FLASK_ENV")
-SCHEMA = os.environ.get("SCHEMA")
-
 
 
 # revision identifiers, used by Alembic.
-revision = 'c25691bcf810'
+revision = '391c9e790f1b'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -28,7 +23,7 @@ def upgrade():
     sa.Column('username', sa.String(length=40), nullable=False),
     sa.Column('email', sa.String(length=255), nullable=False),
     sa.Column('hashed_password', sa.String(length=255), nullable=False),
-    sa.Column('user_role', sa.Enum('admin', 'user'), nullable=False),
+    sa.Column('role', sa.Enum('ADMIN', 'USER', name='userrole'), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('username')
@@ -68,7 +63,7 @@ def upgrade():
     sa.Column('date', sa.DateTime(), nullable=True),
     sa.Column('description', sa.Text(), nullable=False),
     sa.Column('type', sa.String(length=50), nullable=False),
-    sa.Column('status', sa.Enum('active', 'inactive', 'pending', 'close', 'approved', name='event_status'), nullable=False),
+    sa.Column('status', sa.Enum('ACTIVE', 'INACTIVE', 'PENDING', 'CLOSE', 'APPROVED', name='eventstatus'), nullable=False),
     sa.Column('agency_id', sa.Integer(), nullable=True),
     sa.Column('client_id', sa.Integer(), nullable=True),
     sa.Column('service_id', sa.Integer(), nullable=True),
@@ -133,15 +128,6 @@ def upgrade():
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    if environment == "production":
-        op.execute(f"ALTER TABLE users SET SCHEMA {SCHEMA};")
-        op.execute(f"ALTER TABLE agency SET SCHEMA {SCHEMA};")
-        op.execute(f"ALTER TABLE metrics SET SCHEMA {SCHEMA};")
-        op.execute(f"ALTER TABLE services SET SCHEMA {SCHEMA};")
-        op.execute(f"ALTER TABLE events SET SCHEMA {SCHEMA};")
-        op.execute(f"ALTER TABLE contact_submissions SET SCHEMA {SCHEMA};")
-        op.execute(f"ALTER TABLE messages SET SCHEMA {SCHEMA};")
-        op.execute(f"ALTER TABLE notifications SET SCHEMA {SCHEMA};")
     # ### end Alembic commands ###
 
 

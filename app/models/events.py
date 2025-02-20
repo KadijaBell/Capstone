@@ -1,5 +1,13 @@
 from .db import db, environment, SCHEMA, add_prefix_for_prod
 from datetime import datetime
+import enum
+
+class EventStatus(enum.Enum):
+    ACTIVE = 'active'
+    INACTIVE = 'inactive'
+    PENDING = 'pending'
+    CLOSE = 'close'
+    APPROVED = 'approved'
 
 class Event(db.Model):
     __tablename__ = 'events'
@@ -12,7 +20,7 @@ class Event(db.Model):
     date = db.Column(db.DateTime)
     description = db.Column(db.Text, nullable=False)
     type = db.Column(db.String(50), nullable=False)
-    status = db.Column(db.Enum('active', 'inactive', 'pending','close','approved',name='event_status'), nullable=False)
+    status = db.Column(db.Enum(EventStatus), nullable=False)
     agency_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('agency.id')))
     client_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('users.id')), nullable=True)
     service_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('services.id')), nullable=True)
