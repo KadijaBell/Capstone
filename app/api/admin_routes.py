@@ -213,9 +213,9 @@ def send_message(event_id):
 
     new_notification = Notification(
         user_id=event.client_id,
-        event_id=event.id,
+        event_id=event_id,
         message=message_content,
-        created_at=datetime.utcnow()
+        type='admin_message'
     )
 
     db.session.add(new_notification)
@@ -271,39 +271,34 @@ def update_event(id):
 @login_required
 def update_event_status(event_id):
     try:
+        if current_user.role != 'admin':
+            return jsonify({'error': 'Unauthorized'}), 403
+
         event = Event.query.get(event_id)
         if not event:
             return jsonify({'error': 'Event not found'}), 404
 
         data = request.get_json()
         new_status = data.get('status')
-        message = data.get('message')  # Denial reason or approval message
+        message = data.get('message', '')
 
         event.status = new_status
-        if new_status == 'denied':
-            event.denial_reason = message
 
-            # Create notification for user
+        # Only create notification if there's a client_id
+        if event.client_id:
             notification = Notification(
                 user_id=event.client_id,
-                type='event_denied',
-                content=f'Your event "{event.title}" was denied. Reason: {message if message else "No reason provided"}',
-                related_id=event_id
-            )
-            db.session.add(notification)
-        elif new_status == 'approved':
-            # Create notification for user
-            notification = Notification(
-                user_id=event.client_id,
-                type='event_approved',
-                content=f'Your event "{event.title}" has been approved!',
-                related_id=event_id
+                event_id=event_id,
+                message=f'Your event "{event.title}" has been {new_status}' + (f': {message}' if message else ''),
+                type=f'event_{new_status}'
             )
             db.session.add(notification)
 
         db.session.commit()
         return jsonify(event.to_dict()), 200
     except Exception as e:
+        db.session.rollback()
+        print(f"Error updating event status: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @admin_routes.route('/messages/<int:message_id>/status', methods=['PATCH'])

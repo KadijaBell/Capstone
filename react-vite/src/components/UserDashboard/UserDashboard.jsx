@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from 'framer-motion';
 //import { fetchAPI } from "../../utils/api";
 import LoadingSpinner from "../LoadingSpinner";
-import NotificationBell from '../Notifications/NotificationBell';
+// import NotificationBell from '../Notifications/NotificationBell';
 import ContactAdmin from '../ContactForm/ContactAdmin';
 import EventServiceRequestForm from '../../components/EventRequestForm/EventServiceRequestForm'
 import MessageThread from '../MessageFunctions/MessageThread';
@@ -356,36 +356,67 @@ function UserDashboard() {
         }
     };
 
+    const handleMessageAdmin = async (eventId) => {
+        try {
+            const response = await fetch("/api/messages", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ event_id: eventId, content: "User requested contact" })
+            });
+
+            if (!response.ok) throw new Error("Failed to send message");
+            setNotification({
+                show: true,
+                message: "Message sent to admin successfully"
+            });
+        } catch (error) {
+            console.error("Error:", error);
+            setNotification({
+                show: true,
+                message: "Failed to send message"
+            });
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-ivory to-blush pt-20">
-            {/* Modern Header Section */}
-            <div className="p-8 bg-white/80 backdrop-blur-sm shadow-sm">
-                <div className="max-w-7xl mx-auto">
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <h1 className="text-3xl font-bold text-midnight">My  Dashboard</h1>
-                            <p className="text-gray-600 mt-1">Welcome back! </p>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                            <NotificationBell />
-                            <button
-                                onClick={() => setIsInboxOpen(true)}
-                                className="bg-midnight text-gold px-4 py-2 rounded-lg hover:bg-navy transition-all flex items-center gap-2 shadow-elegant"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                                </svg>
-                                Inbox
-                                {messages.filter(m => !m.read).length > 0 && (
-                                    <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                                        {messages.filter(m => !m.read).length}
-                                    </span>
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </div>
+
+    //    <div className="min-h-screen bg-gradient-to-br from-ivory to-blush pt-20">
+    //         {/* Modern Header Section */}
+    //         <div className="p-8 bg-white/80 backdrop-blur-sm shadow-sm">
+    //             <div className="max-w-7xl mx-auto">
+    //                 <div className="flex justify-between items-center">
+    //                     <div>
+    //                         <h1 className="text-3xl font-bold text-midnight">My  Dashboard</h1>
+    //                         <p className="text-gray-600 mt-1">Welcome back! </p>
+    //                     </div>
+    //                     <div className="flex items-center space-x-4">
+    //                         <NotificationBell />
+    //                         <button
+    //                             onClick={() => setIsInboxOpen(true)}
+    //                             className="bg-midnight text-gold px-4 py-2 rounded-lg hover:bg-navy transition-all flex items-center gap-2 shadow-elegant"
+    //                         >
+    //                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+    //                                 <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+    //                                 <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+    //                             </svg>
+    //                             Inbox
+    //                             {messages.filter(m => !m.read).length > 0 && (
+    //                                 <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1">
+    //                                     {messages.filter(m => !m.read).length}
+    //                                 </span>
+    //                             )}
+    //                         </button>
+    //                     </div>
+    //                 </div>
+    //             </div>
+
+
+        <div className="min-h-screen bg-gradient-to-br from-ivory to-blush dark:from-midnight/90 dark:to-charcoal/90 p-6 pt-20">
+            {/* Header Section */}
+            <div className="bg-white/80 dark:bg-midnight/80 backdrop-blur-sm rounded-xl shadow-elegant p-6 mb-8">
+                <h1 className="text-3xl font-bold text-midnight dark:text-ivory">User Dashboard</h1>
+                <p className="text-charcoal dark:text-ivory/80 mt-1">Manage Your Events</p>
             </div>
 
             {/* Main Content */}
@@ -396,7 +427,7 @@ function UserDashboard() {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setShowContactAdmin(true)}
-                        className="bg-gold/90 backdrop-blur-sm text-midnight p-6 rounded-xl hover:bg-gold/80 transition-all shadow-elegant flex items-center gap-4"
+                        className="bg-gold/90 dark:bg-gold/80 backdrop-blur-sm text-midnight dark:text-ivory p-6 rounded-xl hover:bg-gold/80 dark:hover:bg-gold/70 transition-all shadow-elegant flex items-center gap-4"
                     >
                         <div className="bg-white/30 p-3 rounded-lg">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -456,7 +487,7 @@ function UserDashboard() {
                 </div>
 
                 {/* Events Section */}
-                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-elegant">
+                <div className="bg-white/80 dark:bg-midnight/80 backdrop-blur-sm rounded-xl p-6 shadow-elegant">
                     <h2 className="text-xl font-bold mb-4">Recent Proposals</h2>
                     {isLoading ? (
                         <LoadingSpinner />
@@ -467,12 +498,32 @@ function UserDashboard() {
                     ) : (
                         <div className="space-y-4">
                             {events.map((event) => (
-                                <DashboardEventCard
-                                    key={event.id}
-                                    event={event}
-                                    onEdit={setEditingEvent}
-                                    onDelete={setShowDeleteConfirm}
-                                />
+                                <div key={event.id}
+                                    className="bg-white dark:bg-slate-800 rounded-lg shadow-elegant p-6"
+                                >
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <h3 className="text-xl font-semibold text-midnight dark:text-ivory">{event.title}</h3>
+                                            <p className="text-charcoal/70 dark:text-ivory/70">{event.description}</p>
+                                            <div className="mt-2">
+                                                <span className={`inline-block px-3 py-1 rounded-full text-sm ${
+                                                    event.status === 'approved' ? 'bg-mint/20 text-mint' :
+                                                    event.status === 'denied' ? 'bg-red-100 text-red-500' :
+                                                    'bg-gold/20 text-gold'
+                                                }`}>
+                                                    {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            onClick={() => handleMessageAdmin(event.id)}
+                                            className="px-6 py-2 bg-gold hover:bg-gold/90 text-white rounded-md transition-colors"
+                                        >
+                                            Message Admin
+                                        </button>
+                                    </div>
+                                </div>
                             ))}
                         </div>
                     )}

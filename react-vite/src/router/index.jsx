@@ -1,10 +1,18 @@
 import { createBrowserRouter } from "react-router-dom";
-import LoginFormPage from "../components/LoginFormPage";
-import SignupFormPage from "../components/SignupFormPage";
+import LoginFormPage from "../pages/LoginFormPage";
+import SignupFormPage from "../pages/SignupFormPage";
 import HomePage from "../components/HomePage/HomePage";
 import Layout from "./Layout";
-import AgencyPage from "../components/AgencyPage"; // Adjust the path as necessary
+import AgencyPage from "../components/AgencyPage";
 import Insights from "../components/Insights";
+import AboutUsPage from "../pages/AboutUsPage";
+import EventsPage from "../pages/Events/EventsPage";
+import EventDetailsPage from "../pages/Events/EventDetailsPage";
+import InsightsPage from "../pages/InsightsPage";
+import LandingPage from "../pages/LandingPage";
+import UserDashboardPage from "../components/UserDashboard/UserDashboard";
+import AdminDashboardPage from "../components/AdminDashboard/AdminDashboard";
+
 
 
 
@@ -16,6 +24,12 @@ export const router = createBrowserRouter([
         path: "/",
         element: <HomePage />,
       },
+
+      {
+        path: "/landingpage",
+        element: <LandingPage />,
+        // element: <LandingPageHeroSection />
+      },
       {
         path: "/agency-page",
         element: <AgencyPage />,
@@ -26,7 +40,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "/forum",
-        element: <AgencyPage />, // Example for Forum page
+        element: <AgencyPage />,
       },
       {
         path: "/login",
@@ -61,9 +75,13 @@ export const router = createBrowserRouter([
         element: <InsightsPage />,
       },
       {
-        path: "/test",
-        element: <TestPage />,
-      }
+        path: "/dashboard",
+        element: <UserDashboardPage />,
+      },
+      {
+        path: "/admin/dashboard",
+        element: <AdminDashboardPage />,
+      },
     ],
   },
 ]);

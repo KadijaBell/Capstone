@@ -1,12 +1,12 @@
-import HeroSection from "../components/HeroSection/HeroSection"
+import LandingPageHeroSection from "../components/HeroSection/LandingPageHeroSection"
 import FillerCarousel from "../components/InformationSection/FillerCarousel";
 import OpenModalButton from "../components/OpenModalButton/OpenModalButton";
-import SignUpFormModal from "../components/SignupFormModal/SignupFormModal";
+import SignUpFormModal from "../components/SignupFormModal"
 
 function LandingPage() {
   return (
     <div className="bg-midnight text-charcoal">
-      <HeroSection
+      <LandingPageHeroSection
         // title="Welcome to Calif Pierre"
         subtitle="A solutions company rooted in cultural impact. Effortlessly manage events and connect with your community."
         primaryButtonComponent={

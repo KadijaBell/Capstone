@@ -12,7 +12,7 @@ class Notification(db.Model):
     message = db.Column(db.Text, nullable=False)
     read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
+    type = db.Column(db.String(255), nullable=True)
     # Relationships
     user = db.relationship("User", back_populates="notifications")
     event = db.relationship("Event", back_populates="notifications")
@@ -24,5 +24,6 @@ class Notification(db.Model):
             'event_id': self.event_id,
             'message': self.message,
             'read': self.read,
-            'created_at': self.created_at
+            'created_at': self.created_at,
+            'type': self.type
         }

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { FaUserCircle } from 'react-icons/fa';
+import { FaUserCircle, FaSun, FaMoon } from 'react-icons/fa';
 import { thunkLogout } from "../../redux/session";
 import OpenModalMenuItem from "./OpenModalMenuItem";
 import LoginFormModal from "../LoginFormModal";
@@ -14,10 +14,19 @@ function ProfileButton() {
   const [showMenu, setShowMenu] = useState(false);
   const user = useSelector((store) => store.session.user);
   const ulRef = useRef();
+  const [isDarkMode, setIsDarkMode] = useState(
+    localStorage.getItem('theme') === 'dark'
+  );
 
   const toggleMenu = (e) => {
     e.stopPropagation(); // Keep from bubbling up to document and triggering closeMenu
     setShowMenu(!showMenu);
+  };
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+    document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', !isDarkMode ? 'dark' : 'light');
   };
 
   useEffect(() => {
@@ -30,6 +39,12 @@ function ProfileButton() {
     };
 
     document.addEventListener("click", closeMenu);
+
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      setIsDarkMode(savedTheme === 'dark');
+      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+    }
 
     return () => document.removeEventListener("click", closeMenu);
   }, [showMenu]);
@@ -49,7 +64,9 @@ function ProfileButton() {
         onClick={toggleMenu}
         className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-midnight/10 transition-colors"
       >
-        <FaUserCircle className="w-6 h-6 text-gold" />
+        <div className="w-10 h-10 rounded-full bg-midnight/10 flex items-center justify-center">
+          <FaUserCircle className="text-2xl text-gold" />
+        </div>
         {user && <span className="text-ivory text-sm">{user.username}</span>}
       </button>
 
@@ -71,12 +88,12 @@ function ProfileButton() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.1 }}
-              className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-elegant overflow-hidden z-50"
+              className="absolute right-0 mt-2 w-72 bg-white dark:bg-midnight rounded-xl shadow-elegant overflow-hidden z-50"
               ref={ulRef}
             >
               {user ? (
                 <div>
-                  <div className="p-4 bg-gradient-to-br from-midnight to-charcoal">
+                  <div className="p-4 bg-gradient-to-br from-midnight to-charcoal dark:from-charcoal dark:to-black">
                     <p className="font-semibold text-gold">{user.username}</p>
                     <p className="text-sm text-ivory/80">{user.email}</p>
                   </div>
@@ -90,6 +107,13 @@ function ProfileButton() {
                     >
                       <i className="fas fa-columns text-gold"></i>
                       Dashboard
+                    </button>
+                    <button
+                      onClick={toggleTheme}
+                      className="w-full text-left px-4 py-2 text-charcoal dark:text-ivory hover:text-gold flex items-center gap-2"
+                    >
+                      {isDarkMode ? <FaSun className="text-gold" /> : <FaMoon className="text-gold" />}
+                      {isDarkMode ? "Light Mode" : "Dark Mode"}
                     </button>
                     <button
                       onClick={logout}
