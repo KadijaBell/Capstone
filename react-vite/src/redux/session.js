@@ -11,32 +11,67 @@ const removeUser = () => ({
 });
 
 export const thunkAuthenticate = () => async (dispatch) => {
-	const response = await fetch("/api/auth/");
-	if (response.ok) {
-		const data = await response.json();
-		if (data.errors) {
-			return;
-		}
+  try {
+    const response = await fetch("/api/auth/", {
+      credentials: 'include'
+    });
 
-		dispatch(setUser(data));
-	}
+    if (response.ok) {
+      const data = await response.json();
+      console.log("Auth check response:", data); // Debug log
+      dispatch(setUser(data));
+      return data;
+    }
+  } catch (error) {
+    console.error("Auth check error:", error);
+    dispatch(removeUser());
+  }
 };
 
-export const thunkLogin = (credentials) => async dispatch => {
-  const response = await fetch("/api/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(credentials)
-  });
+// export const thunkLogin = (credentials) => async (dispatch) => {
+//   try {
+//     const response = await fetch("/api/auth/login", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify(credentials),
+//     });
 
-  if(response.ok) {
+//     if (!response.ok) {
+//       const data = await response.json();
+//       if (data.errors) throw data.errors;
+//     }
+
+//     const user = await response.json();
+//     dispatch(setUser(user));
+//     return null;
+//   } catch (errors) {
+//     return errors;
+//   }
+// };
+
+export const thunkLogin = (credentials) => async (dispatch) => {
+  try {
+    console.log("Login credentials:", credentials); // Debug log
+
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: 'include', // Important for session cookies
+      body: JSON.stringify(credentials)
+    });
+
     const data = await response.json();
-    dispatch(setUser(data));
-  } else if (response.status < 500) {
-    const errorMessages = await response.json();
-    return errorMessages
-  } else {
-    return { server: "Something went wrong. Please try again" }
+    console.log("Login response data:", data); // Debug log
+
+    if (response.ok) {
+      dispatch(setUser(data));
+      return data;
+    } else {
+      return data; // This will contain any error messages
+    }
+  } catch (error) {
+    console.error("Login error:", error);
+    return { errors: ['An error occurred during login'] };
   }
 };
 
@@ -75,5 +110,8 @@ function sessionReducer(state = initialState, action) {
       return state;
   }
 }
+
+
+
 
 export default sessionReducer;

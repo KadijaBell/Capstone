@@ -1,5 +1,5 @@
-from flask import Blueprint, request,jsonify
-from app.models import User, db
+from flask import Blueprint, request, jsonify
+from app.models import User, db, Notification
 from app.forms import LoginForm
 from app.forms import SignUpForm
 from flask_login import current_user, login_user, logout_user, login_required
@@ -13,8 +13,9 @@ def authenticate():
     Authenticates a user.
     """
     if current_user.is_authenticated:
+        print(f"Auth check - User: {current_user}, Role: {current_user.role}")  # Debug log
         return current_user.to_dict()
-    return {'errors': {'message': 'Unauthorized'}}, 401
+    return {'errors': ['Unauthorized']}, 401
 
 
 @auth_routes.route('/login', methods=['POST'])
@@ -27,11 +28,16 @@ def login():
     # form manually to validate_on_submit can be used
     form['csrf_token'].data = request.cookies['csrf_token']
     if form.validate_on_submit():
-        # Add the user to the session, we are logged in!
-        user = User.query.filter(User.email == form.data['email']).first()
+        user = User.query.filter(
+            (User.email == form.data['user']) |
+            (User.username == form.data['user'])
+        ).first()
+
+        print(f"Login attempt - User: {user}, Role: {user.role if user else 'None'}")  # Debug log
+
         login_user(user)
         return user.to_dict()
-    return form.errors, 401
+    return {'errors':(form.errors)}, 401
 
 
 @auth_routes.route('/logout')

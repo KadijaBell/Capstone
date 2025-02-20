@@ -1,0 +1,31 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 50;
+}
+
+/* Add this for notifications */
+.notification-bell {
+    position: relative;
+    z-index: 60;
+}
+
+.notification-dropdown {
+    position: absolute;
+    z-index: 70;
+    right: 0;
+    top: 100%;
+    margin-top: 0.5rem;
+}
