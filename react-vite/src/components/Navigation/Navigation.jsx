@@ -1,10 +1,14 @@
-import { NavLink } from "react-router-dom";
-import ProfileButton from "./ProfileButton";
-import OpenModalButton from "../OpenModalButton"; // This component triggers the modal
-import LoginFormModal from "../LoginFormModal";
-import SignupFormModal from "../SignupFormModal";
+
+// export default Navigation;
+// import { useSelector } from "react-redux";
+// import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useSelector } from "react-redux";
+// import { motion } from "framer-motion";
+// import ProfileButton from "./ProfileButton";
+// import OpenModalButton from "../OpenModalButton"; // This component triggers the modal
+// import LoginFormModal from "../LoginFormModal";
+// import SignupFormModal from "../SignupFormModal";
+
 
 
 function Navigation() {

@@ -1,3 +1,33 @@
 .profile-dropdown {
   position: absolute;
 }
+.nav-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: #333;
+  color: #fff;
+}
+
+.brand {
+  font-size: 1.5rem;
+}
+
+ul {
+  list-style: none;
+  display: flex;
+  gap: 1rem;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #fff;
+}
+
+.nav-link.active {
+  font-weight: bold;
+  border-bottom: 2px solid #f39c12;
+}
+
+

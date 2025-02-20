@@ -16,6 +16,32 @@ class User(db.Model, UserMixin):
 
     agency = db.relationship("Agency", back_populates="user", uselist=False)
     events = db.relationship("Event", back_populates="client", cascade="all, delete-orphan")
+    notifications = db.relationship(
+        "Notification",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    replied_submissions = db.relationship(
+        'ContactSubmission',
+        foreign_keys='ContactSubmission.replied_by',
+        backref='replier'
+    )
+    created_submissions = db.relationship(
+        'ContactSubmission',
+        foreign_keys='ContactSubmission.created_by',
+        backref='creator'
+    )
+    sent_messages = db.relationship(
+        'Message',
+        foreign_keys='Message.sender_id',
+        back_populates='sender',
+        cascade="all, delete-orphan"
+    )
+    received_messages = db.relationship(
+        'Message',
+        foreign_keys='Message.recipient_id',
+        back_populates='recipient'
+    )
 
     @property
     def password(self):

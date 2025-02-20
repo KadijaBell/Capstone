@@ -59,6 +59,16 @@
 | `value`        | Float       |                                    |
 | `created_at`   | Timestamp   | Default: current timestamp         |
 
+### **Contact Submissions Table**
+| Column       | Type        | Constraints                        |
+|--------------|-------------|------------------------------------|
+| `id`         | Integer     | Primary Key, Auto Increment        |
+| `name`       | String(100) | Not Null                          |
+| `email`      | String(255) | Not Null                          |
+| `subject`    | String(255) | Not Null                          |
+| `message`    | Text        | Not Null                          |
+| `status`     | String(50)  | Default: 'pending'                |
+| `created_at` | Timestamp   | Default: current timestamp         |
 
 ## API Endpoints
 
@@ -239,3 +249,44 @@
   {
     "status": "Message sent successfully."
   }
+
+### Contact Submissions
+
+#### Submit Contact Form
+**POST** `/api/admin/contact-submissions`
+- **Description**: Allows non-authenticated users to submit contact messages
+- **Request Body**:
+  ```json
+  {
+    "name": "John Doe",
+    "email": "john@example.com",
+    "subject": "General Inquiry",
+    "message": "I would like to learn more about your services."
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "message": "Contact submission received successfully"
+  }
+  ```
+
+#### Get Contact Submissions (Admin Only)
+**GET** `/api/admin/contact-submissions`
+- **Description**: Retrieves all contact form submissions (requires admin authentication)
+- **Response**:
+  ```json
+  {
+    "submissions": [
+      {
+        "id": 1,
+        "name": "John Doe",
+        "email": "john@example.com",
+        "subject": "General Inquiry",
+        "message": "I would like to learn more about your services.",
+        "status": "pending",
+        "created_at": "2024-03-14T12:00:00Z"
+      }
+    ]
+  }
+  ```

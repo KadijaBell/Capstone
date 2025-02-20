@@ -14,7 +14,7 @@ const images = [
   "/assets/capstone-image-8.jpg",
 ];
 
-const HeroSection = () => {
+function HeroSection() {
   return (
     <main className="w-full">
       <section className="relative pt-10 xl:pt-14 bg-midnight text-ivory">
@@ -90,6 +90,6 @@ const HeroSection = () => {
       </section>
     </main>
   );
-};
+}
 
 export default HeroSection;

@@ -10,3 +10,5 @@ def get_agencies():
     """
     agencies = Agency.query.all()
     return jsonify([agency.to_dict() for agency in agencies]),200
+
+
