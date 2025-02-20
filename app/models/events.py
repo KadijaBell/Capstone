@@ -1,4 +1,4 @@
-from .db import db, environment, SCHEMA
+from .db import db, environment, SCHEMA, add_prefix_for_prod
 from datetime import datetime
 
 class Event(db.Model):
@@ -13,9 +13,9 @@ class Event(db.Model):
     description = db.Column(db.Text, nullable=False)
     type = db.Column(db.String(50), nullable=False)
     status = db.Column(db.Enum('active', 'inactive', 'pending','close','approved',name='event_status'), nullable=False)
-    agency_id = db.Column(db.Integer, db.ForeignKey('agency.id'))
-    client_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    service_id = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=True)
+    agency_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('agency.id')))
+    client_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('users.id')), nullable=True)
+    service_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('services.id')), nullable=True)
     service_type = db.Column(db.String(50), nullable=True)
     event_type = db.Column(db.String(50), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
