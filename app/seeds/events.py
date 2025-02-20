@@ -1,6 +1,7 @@
-from app.models import db, Event, environment, SCHEMA, EventStatus
+from app.models import db, Event, environment, SCHEMA
 from sqlalchemy.sql import text
 from datetime import datetime
+from app.models.events import EventStatus
 
 
 
@@ -61,7 +62,7 @@ def seed_events():
         date=None,
         description="A campaign to promote  practices.",
         type="influencer",
-        status=EventStatus.APPROVED,
+        status=EventStatus.INACTIVE,
         agency_id=3,
         client_id=4,
         service_id=3,
@@ -72,7 +73,7 @@ def seed_events():
         title=" Awareness Campaign",
         description="A campaign to promote  practices.",
         type="cause",
-        status=EventStatus.RESOLVED,
+        status=EventStatus.CLOSE,
         client_id=4,
         service_id=3,
         agency_id=3
