@@ -1,6 +1,6 @@
 from flask.cli import AppGroup
 from .users import seed_users, undo_users
-from .agencies import seed_agencies, undo_agencies
+from .agencies import seed_agency, undo_agency
 from .events import seed_events, undo_events
 from .services import seed_services, undo_services
 from .metrics import seed_metrics, undo_metrics
@@ -24,12 +24,12 @@ def seed():
         undo_metrics()
         undo_events()
         undo_services()
-        undo_agencies()
+        undo_agency()
         undo_users()
 
     # Seed in order of dependencies
     seed_users()
-    seed_agencies()  # Depends on users
+    seed_agency()  # Depends on users
     seed_services()  # Depends on agencies
     seed_events()    # Depends on agencies, services, and users
     seed_metrics()   # Depends on agencies
@@ -43,4 +43,4 @@ def undo():
         undo_events()
         undo_services()
         undo_metrics()
-        undo_agencies()
+        undo_agency()
