@@ -6,7 +6,8 @@ from flask_login import UserMixin
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
 
-    if environment == "production": __table_args__ = {'schema': SCHEMA}
+    if environment == "production":
+        __table_args__ = {'schema': SCHEMA}
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(40), nullable=False, unique=True)
@@ -15,7 +16,12 @@ class User(db.Model, UserMixin):
     role = db.Column(db.Enum('admin', 'user'),name='user_role', nullable=False, default='user')
 
     agency = db.relationship("Agency", back_populates="user", uselist=False)
-    events = db.relationship("Event", back_populates="client", cascade="all, delete-orphan")
+    events = db.relationship(
+        "Event",
+        back_populates="client",
+        foreign_keys='Event.client_id',
+        cascade="all, delete-orphan"
+    )
     notifications = db.relationship(
         "Notification",
         back_populates="user",

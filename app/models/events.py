@@ -1,4 +1,4 @@
-from .db import db, environment, SCHEMA
+from .db import db, environment, SCHEMA, add_prefix_for_prod
 from datetime import datetime
 
 class Event(db.Model):
@@ -12,22 +12,38 @@ class Event(db.Model):
     date = db.Column(db.DateTime)
     description = db.Column(db.Text, nullable=False)
     type = db.Column(db.String(50), nullable=False)
-    status = db.Column(db.Enum('active', 'inactive', 'pending','close','approved',name='event_status'), nullable=False)
-    agency_id = db.Column(db.Integer, db.ForeignKey('agency.id'))
-    client_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    service_id = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=True)
+    status = db.Column(
+        db.Enum(
+            'active',
+            'inactive',
+            'pending',
+            'close',
+            'approved',
+            'denied',
+            name='event_status'
+        ),
+        nullable=False
+    )
+    agency_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('agency.id')))
+    client_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('users.id')), nullable=True)
+    service_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('services.id')), nullable=True)
     service_type = db.Column(db.String(50), nullable=True)
     event_type = db.Column(db.String(50), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     denial_reason = db.Column(db.Text)
-
-
+    edit_requested = db.Column(db.Boolean, default=False)
+    edit_message = db.Column(db.Text)
+    user_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('users.id')))
 
     agency = db.relationship("Agency", back_populates="events")
     service = db.relationship("Service", back_populates="events")
-    client = db.relationship("User", back_populates="events")
-    notifications = db.relationship("Notification",back_populates="event",cascade="all, delete-orphan")
+    client = db.relationship(
+        "User",
+        back_populates="events",
+        foreign_keys=[client_id]
+    )
+    notifications = db.relationship("Notification", back_populates="event", cascade="all, delete-orphan")
     contact_submissions = db.relationship('ContactSubmission', back_populates='event', cascade='all, delete-orphan')
     messages = db.relationship('Message', back_populates='event', cascade='all, delete-orphan')
 
@@ -49,5 +65,8 @@ class Event(db.Model):
             'service_type': self.service_type,
             'event_type': self.event_type,
             'denial_reason': self.denial_reason,
+            'edit_requested': self.edit_requested,
+            'edit_message': self.edit_message,
+            'user_id': self.user_id or self.client_id,
             'messages': [message.to_dict() for message in self.messages]
         }

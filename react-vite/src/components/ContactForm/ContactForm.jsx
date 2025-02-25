@@ -60,12 +60,12 @@ function ContactForm() {
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="space-y-6"
+      className="space-y-8"
       onSubmit={handleSubmit}
     >
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-midnight mb-2">
+      <div className="grid md:grid-cols-2 gap-8">
+        <div className="space-y-2">
+          <label htmlFor="name" className="text-ivory/90 font-medium block text-lg">
             Name
           </label>
           <input
@@ -75,11 +75,14 @@ function ContactForm() {
             value={formData.name}
             onChange={handleChange}
             required
-            className="w-full px-4 py-2 border border-charcoal/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+            className="w-full px-6 py-4 rounded-xl bg-white/10 border border-gold/20
+            focus:border-gold/50 focus:outline-none focus:ring-2 focus:ring-gold/20
+            text-ivory/90 placeholder-ivory/50 backdrop-blur-sm transition-all"
+            placeholder="Your name"
           />
         </div>
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-midnight mb-2">
+        <div className="space-y-2">
+          <label htmlFor="email" className="text-ivory/90 font-medium block text-lg">
             Email
           </label>
           <input
@@ -89,12 +92,16 @@ function ContactForm() {
             value={formData.email}
             onChange={handleChange}
             required
-            className="w-full px-4 py-2 border border-charcoal/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+            className="w-full px-6 py-4 rounded-xl bg-white/10 border border-gold/20
+            focus:border-gold/50 focus:outline-none focus:ring-2 focus:ring-gold/20
+            text-ivory/90 placeholder-ivory/50 backdrop-blur-sm transition-all"
+            placeholder="your@email.com"
           />
         </div>
       </div>
-      <div>
-        <label htmlFor="subject" className="block text-sm font-medium text-midnight mb-2">
+
+      <div className="space-y-2">
+        <label htmlFor="subject" className="text-ivory/90 font-medium block text-lg">
           Subject
         </label>
         <input
@@ -104,11 +111,15 @@ function ContactForm() {
           value={formData.subject}
           onChange={handleChange}
           required
-          className="w-full px-4 py-2 border border-charcoal/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+          className="w-full px-6 py-4 rounded-xl bg-white/10 border border-gold/20
+          focus:border-gold/50 focus:outline-none focus:ring-2 focus:ring-gold/20
+          text-ivory/90 placeholder-ivory/50 backdrop-blur-sm transition-all"
+          placeholder="What's this about?"
         />
       </div>
-      <div>
-        <label htmlFor="message" className="block text-sm font-medium text-midnight mb-2">
+
+      <div className="space-y-2">
+        <label htmlFor="message" className="text-ivory/90 font-medium block text-lg">
           Message
         </label>
         <textarea
@@ -117,27 +128,36 @@ function ContactForm() {
           value={formData.message}
           onChange={handleChange}
           required
-          rows={4}
-          className="w-full px-4 py-2 border border-charcoal/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold"
+          rows={6}
+          className="w-full px-6 py-4 rounded-xl bg-white/10 border border-gold/20
+          focus:border-gold/50 focus:outline-none focus:ring-2 focus:ring-gold/20
+          text-ivory/90 placeholder-ivory/50 backdrop-blur-sm transition-all resize-none"
+          placeholder="Your message here..."
         />
       </div>
+
       {status.message && (
-        <div className={`p-4 rounded-lg ${
-          status.type === 'success' ? 'bg-green-100 text-green-700' :
-          status.type === 'error' ? 'bg-red-100 text-red-700' :
-          'bg-blue-100 text-blue-700'
-        }`}>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`p-6 rounded-xl backdrop-blur-sm border ${
+            status.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
+            status.type === 'error' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
+            'bg-blue-500/10 border-blue-500/20 text-blue-400'
+          }`}
+        >
           {status.message}
-        </div>
+        </motion.div>
       )}
+
       <motion.button
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         type="submit"
         disabled={status.type === 'loading'}
-        className={`w-full bg-gold text-midnight py-3 rounded-lg font-semibold
-          hover:bg-ivory transition duration-300
-          ${status.type === 'loading' ? 'opacity-70 cursor-not-allowed' : ''}`}
+        className={`w-full py-4 px-8 rounded-xl bg-gold text-midnight font-semibold
+        hover:bg-gold/90 transition-colors duration-300 shadow-elegant backdrop-blur-sm
+        text-lg ${status.type === 'loading' ? 'opacity-70 cursor-not-allowed' : ''}`}
       >
         {status.type === 'loading' ? 'Sending...' : 'Send Message'}
       </motion.button>

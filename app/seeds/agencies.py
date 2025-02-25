@@ -2,7 +2,7 @@ from app.models import db, Agency, environment, SCHEMA
 from sqlalchemy.sql import text
 
 
-def seed_agencies():
+def seed_agency():
     agency1 = Agency(
         name="Elite Event Planners",
         description="Specializing in high-end event planning for exclusive clients.",
@@ -25,9 +25,9 @@ def seed_agencies():
     db.session.commit()
 
 
-def undo_agencies():
+def undo_agency():
     if environment == "production":
-        db.session.execute(f"TRUNCATE table {SCHEMA}.agencies RESTART IDENTITY CASCADE;")
+        db.session.execute(f"TRUNCATE table {SCHEMA}.agency RESTART IDENTITY CASCADE;")
     else:
-        db.session.execute(text("DELETE FROM agencies"))
+        db.session.execute(text("DELETE FROM agency"))
     db.session.commit()

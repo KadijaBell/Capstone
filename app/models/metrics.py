@@ -1,4 +1,4 @@
-from .db import db, environment, SCHEMA
+from .db import db, environment, SCHEMA, add_prefix_for_prod
 from datetime import datetime
 
 class Metric(db.Model):
@@ -8,7 +8,7 @@ class Metric(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     metric_name = db.Column(db.String, nullable=False)
-    agency_id = db.Column(db.Integer, db.ForeignKey('agency.id'))
+    agency_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('agency.id')))
     value = db.Column(db.Float)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

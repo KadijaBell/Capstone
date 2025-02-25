@@ -90,6 +90,20 @@ module.exports = {
         'lg': '12px',
         'xl': '16px',
       },
+      fontFamily: {
+        display: ['Montserrat', 'sans-serif'], // Add your preferred display font
+        body: ['Inter', 'sans-serif'], // Add your preferred body font
+      },
+      fontSize: {
+        // Add custom font sizes if needed
+        '7xl': '4.5rem',
+        '8xl': '6rem',
+        '9xl': '8rem',
+      },
+      letterSpacing: {
+        'widest': '.25em',
+        'super': '.5em',
+      },
     },
   },
   plugins: [],

@@ -1,4 +1,4 @@
-from .db import db, environment, SCHEMA
+from .db import db, environment, SCHEMA, add_prefix_for_prod
 from datetime import datetime
 
 class ContactSubmission(db.Model):
@@ -13,12 +13,12 @@ class ContactSubmission(db.Model):
     status = db.Column(db.String(20), default='pending')
     admin_reply = db.Column(db.Text)
     replied_at = db.Column(db.DateTime)
-    replied_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    replied_by = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('users.id')))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    event_id = db.Column(db.Integer, db.ForeignKey('events.id'))
+    created_by = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('users.id')))
+    event_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('events.id')))
 
-    
+
     event = db.relationship('Event', back_populates='contact_submissions')
 
     def to_dict(self):

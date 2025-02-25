@@ -112,6 +112,26 @@ def get_users():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@admin_routes.route('/messages', methods=['GET'])
+@login_required
+def get_admin_messages():
+    """
+    Get all messages for admin
+    """
+    try:
+        if current_user.role != 'admin':
+            return jsonify({'error': 'Unauthorized'}), 403
+
+        messages = Message.query.order_by(Message.created_at.desc()).all()
+
+        return jsonify({
+            'messages': [message.to_dict() for message in messages],
+            'count': len(messages)
+        }), 200
+    except Exception as e:
+        print(f"Error in get_admin_messages: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
+
 
 #POST
 @admin_routes.route('/contact', methods=['POST'])
@@ -156,42 +176,46 @@ def submit_contact():
 
 @admin_routes.route('/messages/<int:message_id>/reply', methods=['POST'])
 @login_required
-def reply_to_message(message_id):
-    """Reply to a message and create a thread"""
+def admin_reply_to_message(message_id):
     try:
         data = request.get_json()
-        original_message = Message.query.get(message_id)
+        content = data.get('content')
 
+        if not content:
+            return jsonify({'error': 'Content is required'}), 400
+
+        # Get the original message
+        original_message = Message.query.get(message_id)
         if not original_message:
             return jsonify({'error': 'Message not found'}), 404
 
-        # Create the reply message
-        reply = Message(
-            content=data.get('content'),
+        # Check if this message is part of a thread
+        thread_id = original_message.thread_id or original_message.id
+
+        # Create new reply message
+        new_reply = Message(
+            content=content,
             sender_id=current_user.id,
-            event_id=original_message.event_id,
+            recipient_id=original_message.sender_id,
+            thread_id=thread_id,  # Use existing thread_id
             is_admin_message=True,
-            status='read'
+            status='unread'
         )
 
-        # If this is the first reply, set up the thread
-        if not original_message.thread_id:
-            original_message.thread_id = original_message.id
-            reply.thread_id = original_message.id
-        else:
-            reply.thread_id = original_message.thread_id
-
-        # Set the parent-child relationship
-        reply.parent_id = message_id
-
-        # Update original message status
-        original_message.status = 'read'
-        original_message.replied_at = datetime.utcnow()
-
-        db.session.add(reply)
+        db.session.add(new_reply)
         db.session.commit()
 
-        return jsonify(original_message.to_dict()), 200
+        # Return the entire thread
+        thread_messages = Message.query.filter(
+            (Message.id == thread_id) |
+            (Message.thread_id == thread_id)
+        ).order_by(Message.created_at).all()
+
+        return jsonify({
+            'message': new_reply.to_dict(),
+            'thread': [msg.to_dict() for msg in thread_messages]
+        }), 201
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
@@ -251,34 +275,129 @@ def create_message():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-#PUT/PATCH
-@admin_routes.route('/events/<int:id>', methods=['PUT'])
+@admin_routes.route('/events/<int:event_id>/edit-request', methods=['POST'])
 @login_required
-def update_event(id):
-    """
-    Update the status of an event (admin-only).
-    """
+def request_event_edit(event_id):
     if current_user.role != 'admin':
-        return {'error': 'Unauthorized'}, 403
+        return jsonify({'error': 'Unauthorized'}), 403
 
-    event = Event.query.get_or_404(id)
-    data = request.get_json()
-    if 'status' in data:
-        event.status = data['status']
+    try:
+        data = request.get_json()
+        event = Event.query.get_or_404(event_id)
+
+        # Update event
+        event.edit_requested = True
+        event.edit_message = data.get('message')
+
+        # Create notification for user
+        notification = Notification(
+            user_id=event.client_id,
+            event_id=event_id,
+            message=f"Edit requested for your event '{event.title}'",
+            type="request_edit",
+            created_at=datetime.utcnow(),
+            read=False
+        )
+
+        # Create message for the edit request
+        message = Message(
+            sender_id=current_user.id,
+            recipient_id=event.client_id,
+            event_id=event_id,
+            content=data.get('message'),
+            # type='edit_request',
+            status='unread',
+            created_at=datetime.utcnow(),
+            is_admin_message=True
+        )
+
+        db.session.add(notification)
+        db.session.add(message)
         db.session.commit()
-    return jsonify(event.to_dict())
 
+        return jsonify({
+            'message': 'Edit request sent successfully',
+            'event': event.to_dict(),
+            'notification': notification.to_dict(),
+            'thread_message': message.to_dict()
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in request_event_edit: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@admin_routes.route('/events/<int:event_id>/<action>', methods=['POST'])
+@login_required
+def handle_event_action(event_id, action):
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    try:
+        event = Event.query.get_or_404(event_id)
+        data = request.get_json()
+
+        if action == 'approve':
+            event.status = 'approved'
+            message_content = f"Your event '{event.title}' has been approved"
+        elif action == 'deny':
+            event.status = 'denied'
+            event.denial_reason = data.get('reason', '')
+            message_content = f"Your event '{event.title}' has been denied. Reason: {event.denial_reason}"
+        else:
+            return jsonify({'error': 'Invalid action'}), 400
+
+        # Create notification
+        notification = Notification(
+            user_id=event.client_id,
+            event_id=event_id,
+            message=message_content,
+            type=f'request_{action}',
+            created_at=datetime.utcnow(),
+            read=False
+        )
+
+        # Create message
+        message = Message(
+            sender_id=current_user.id,
+            recipient_id=event.client_id,
+            event_id=event_id,
+            content=message_content,
+            status='unread',
+            created_at=datetime.utcnow(),
+            is_admin_message=True
+        )
+
+        db.session.add(notification)
+        db.session.add(message)
+        db.session.commit()
+
+        return jsonify({
+            'message': f'Request {action}ed successfully',
+            'event': event.to_dict(),
+            'notification': notification.to_dict(),
+            'thread_message': message.to_dict()
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in handle_event_action: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+#PUT/PATCH
 @admin_routes.route('/events/<int:event_id>/status', methods=['PATCH'])
 @login_required
 def update_event_status(event_id):
+    """
+    Update the status of an event (admin-only).
+    Supports optional message for notification.
+    """
     try:
         if current_user.role != 'admin':
             return jsonify({'error': 'Unauthorized'}), 403
 
-        event = Event.query.get(event_id)
-        if not event:
-            return jsonify({'error': 'Event not found'}), 404
-
+        event = Event.query.get_or_404(event_id)
         data = request.get_json()
         new_status = data.get('status')
         message = data.get('message', '')
@@ -344,12 +463,58 @@ def edit_message(message_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+@admin_routes.route('/events/<int:event_id>', methods=['PATCH'])
+@login_required
+def update_event_details(event_id):
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    try:
+        event = Event.query.get_or_404(event_id)
+        data = request.json
+
+        # Update event fields
+        for key, value in data.items():
+            if hasattr(event, key) and key != 'id':
+                setattr(event, key, value)
+
+        # Handle user notification if requested
+        if data.get('notify_user'):
+            notification = Notification(
+                user_id=event.user_id,
+                title="Event Update",
+                content=f"Your event '{event.title}' has been updated by an admin.",
+                type="event_update"
+            )
+            db.session.add(notification)
+
+        db.session.commit()
+        return jsonify(event.to_dict())
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@admin_routes.route('/notifications/<int:notification_id>/read', methods=['PATCH'])
+@login_required
+def mark_notification_read(notification_id):
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    try:
+        notification = Notification.query.get_or_404(notification_id)
+        notification.read = True
+        db.session.commit()
+        return jsonify(notification.to_dict())
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 
 #DELETE
-@admin_routes.route('/events/<int:id>', methods=['DELETE'])
+@admin_routes.route('/events/<int:event_id>', methods=['DELETE'])
 @login_required
-def delete_event(id):
+def delete_event(event_id):
     """
     Delete an event (admin-only).
     """
@@ -392,25 +557,30 @@ def admin_dashboard():
     if current_user.role != 'admin':
         return jsonify({'error': 'Unauthorized access'}), 403
 
-    if current_user.role == 'admin':
-        # Admin
-        total_events = Event.query.count()
-        pending_events = Event.query.filter(Event.status == 'pending').count()
-        users_count = User.query.count()
-        total_services = Service.query.count()
+    try:
+        # Get all events
         events = Event.query.all()
-        pending_events_list = Event.query.filter(Event.status == 'pending').all()
-        messages = Message.query.all()
 
-    return {
-            "role": "admin",
-            "dashboard_data": {
-                "total_events": total_events,
-                "pending_events": pending_events,
-                "users_count": users_count,
-                "total_services": total_services,
-                "messages": [message.to_dict() for message in messages]
-            },
-            "pending_events": [event.to_dict() for event in pending_events_list],
-            "events": [event.to_dict() for event in events],
-        }, 200
+        # Get messages where admin is either sender or recipient
+        messages = Message.query.filter(
+            (Message.recipient_id == current_user.id) |
+            (Message.sender_id == current_user.id)
+        ).order_by(Message.created_at.desc()).all()
+
+        # Get notifications for admin
+        notifications = Notification.query.filter_by(
+            user_id=current_user.id,
+            read=False
+        ).order_by(Notification.created_at.desc()).all()
+
+        return jsonify({
+            'events': [event.to_dict() for event in events],
+            'dashboard_data': {
+                'messages': [message.to_dict() for message in messages],
+                'notifications': [notif.to_dict() for notif in notifications]
+            }
+        }), 200
+
+    except Exception as e:
+        print(f"Error in admin_dashboard: {str(e)}")
+        return jsonify({'error': str(e)}), 500

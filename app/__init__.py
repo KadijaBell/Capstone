@@ -17,11 +17,11 @@ from .seeds import seed_commands
 from .config import Config
 
 def create_app():
-    app = Flask(__name__, static_folder='../react-vite/dist', static_url_path='/')
+    app = Flask(__name__, static_folder='static', static_url_path='/')
 
     # Session configuration
     app.config['SECRET_KEY'] = 'your-secret-key'  # Make sure this is set
-    app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production
+    app.config['SESSION_COOKIE_SECURE'] = os.getenv("FLASK_ENV") == "production" # Set to True in production
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
@@ -46,6 +46,7 @@ def create_app():
     app.cli.add_command(seed_commands)
 
     app.config.from_object(Config)
+
     app.register_blueprint(user_routes, url_prefix='/api/users')
     app.register_blueprint(auth_routes, url_prefix='/api/auth')
     app.register_blueprint(event_routes, url_prefix='/api/events')
@@ -54,6 +55,7 @@ def create_app():
     app.register_blueprint(metric_routes, url_prefix='/api/metrics')
     app.register_blueprint(agency_routes, url_prefix='/api/agencies')
     app.register_blueprint(notification_routes, url_prefix='/api/notifications')
+
     db.init_app(app)
     Migrate(app, db)
 
@@ -108,10 +110,6 @@ def create_app():
     def not_found(e):
         return app.send_static_file('index.html')
 
-    # TODO: Notification feature temporarily removed. To re-implement:
-    # 1. Re-enable NotificationProvider in Layout.jsx
-    # 2. Re-add NotificationBell to Navigation.jsx and AdminDashboard.jsx
-    # 3. Resolve CORS issues with proper configuration
-    # 4. Test notification functionality
+    # app = app
 
     return app

@@ -58,7 +58,7 @@ def seed_events():
         location=None,
         date=None,
         description="A campaign to promote  practices.",
-        type="influencer",  
+        type="influencer",
         status="approved",
         agency_id=3,
         client_id=4,
@@ -70,7 +70,7 @@ def seed_events():
         title=" Awareness Campaign",
         description="A campaign to promote  practices.",
         type="cause",
-        status="resolved",
+        status="active",
         client_id=4,
         service_id=3,
         agency_id=3

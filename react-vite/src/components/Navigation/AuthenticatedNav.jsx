@@ -19,8 +19,8 @@ function AuthenticatedNav() {
   // Define navigation links with correct paths
   const navLinks = [
     { name: "About", path: "/about-us" },
-    { name: "Community", path: "/community" },
-    { name: "Agency", path: "/agencies" },
+    { name: "Community", path: "/public" },
+    { name: "Agency", path: "/agency" },
     { name: "Insights", path: "/metrics" },
   ];
 

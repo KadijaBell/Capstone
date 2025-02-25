@@ -1,4 +1,4 @@
-from .db import db, environment, SCHEMA
+from .db import db, environment, SCHEMA, add_prefix_for_prod
 from datetime import datetime
 
 class Service(db.Model):
@@ -9,7 +9,7 @@ class Service(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.Text, nullable=False)
-    agency_id = db.Column(db.Integer, db.ForeignKey('agency.id'), nullable=True)
+    agency_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('agency.id')), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
