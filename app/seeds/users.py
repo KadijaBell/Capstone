@@ -1,5 +1,7 @@
 from app.models import db, User, environment, SCHEMA
 from sqlalchemy.sql import text
+from app.models.user import UserRole
+
 
 
 # Adds a demo user, you can add other users here if you want
@@ -8,25 +10,25 @@ def seed_users():
         username='AdminUser',
         email='admin@capstone.com',
         password='secureadminpassword',
-        role='admin'
+        role=UserRole.ADMIN
     )
     demo = User(
         username='Demo',
         email='demo@aa.io',
         password='password',
-        role='user'
+        role=UserRole.USER
     )
     marnie = User(
         username='marnie',
         email='marnie@aa.io',
         password='password',
-        role='user'
+        role=UserRole.USER
     )
     bobbie = User(
         username='bobbie',
         email='bobbie@aa.io',
         password='password',
-        role = 'user'
+        role = UserRole.USER
     )
 
     db.session.add(admin)

@@ -1,10 +1,12 @@
 from .db import db, environment, SCHEMA, add_prefix_for_prod
 from datetime import datetime
 
+
 class Service(db.Model):
     __tablename__ = 'services'
 
     if environment == "production": __table_args__ = {'schema': SCHEMA}
+
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String, nullable=False)

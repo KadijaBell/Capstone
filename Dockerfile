@@ -19,6 +19,9 @@ RUN pip install psycopg2
 
 COPY . .
 
-RUN flask db upgrade
-RUN flask seed all
-CMD gunicorn app:app
+# RUN flask db upgrade
+# RUN flask seed all
+RUN flask db upgrade || flask db migrate && flask db upgrade && flask seed all
+
+# CMD gunicorn app:app
+CMD flask seed all && gunicorn app:app

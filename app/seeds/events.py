@@ -70,7 +70,7 @@ def seed_events():
         title=" Awareness Campaign",
         description="A campaign to promote  practices.",
         type="cause",
-        status="active",
+        status=EventStatus.CLOSE,
         client_id=4,
         service_id=3,
         agency_id=3

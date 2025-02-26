@@ -1,5 +1,13 @@
 from .db import db, environment, SCHEMA, add_prefix_for_prod
 from datetime import datetime
+import enum
+
+class EventStatus(enum.Enum):
+    ACTIVE = 'active'
+    INACTIVE = 'inactive'
+    PENDING = 'pending'
+    CLOSE = 'close'
+    APPROVED = 'approved'
 
 class Event(db.Model):
     __tablename__ = 'events'
