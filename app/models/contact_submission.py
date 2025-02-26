@@ -1,6 +1,5 @@
 from .db import db, environment, SCHEMA, add_prefix_for_prod
-from datetime import datetime
-
+from sqlalchemy.sql import func
 class ContactSubmission(db.Model):
     __tablename__ = 'contact_submissions'
     if environment == "production": __table_args__ = {'schema': SCHEMA}
@@ -14,7 +13,7 @@ class ContactSubmission(db.Model):
     admin_reply = db.Column(db.Text)
     replied_at = db.Column(db.DateTime)
     replied_by = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('users.id')))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=func.now())
     created_by = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('users.id')))
     event_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('events.id')))
 

@@ -1,5 +1,5 @@
 from .db import db, environment, SCHEMA, add_prefix_for_prod
-from datetime import datetime
+from sqlalchemy.sql import func
 
 class Notification(db.Model):
     __tablename__ = 'notifications'
@@ -11,7 +11,7 @@ class Notification(db.Model):
     event_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('events.id')), nullable=True)
     message = db.Column(db.Text, nullable=False)
     read = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=func.now())
     type = db.Column(db.String(255), nullable=True)
     # Relationships
     user = db.relationship("User", back_populates="notifications")

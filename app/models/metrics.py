@@ -1,5 +1,5 @@
 from .db import db, environment, SCHEMA, add_prefix_for_prod
-from datetime import datetime
+from sqlalchemy.sql import func
 
 class Metric(db.Model):
     __tablename__ = 'metrics'
@@ -10,7 +10,7 @@ class Metric(db.Model):
     metric_name = db.Column(db.String, nullable=False)
     agency_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('agency.id')))
     value = db.Column(db.Float)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=func.now())
 
     agency = db.relationship("Agency", back_populates="metrics")
 

@@ -1,5 +1,5 @@
 from .db import db, environment, SCHEMA, add_prefix_for_prod
-from datetime import datetime
+from sqlalchemy.sql import func
 import enum
 
 class EventStatus(enum.Enum):
@@ -37,8 +37,8 @@ class Event(db.Model):
     service_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('services.id')), nullable=True)
     service_type = db.Column(db.String(50), nullable=True)
     event_type = db.Column(db.String(50), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=func.now())
+    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
     denial_reason = db.Column(db.Text)
     edit_requested = db.Column(db.Boolean, default=False)
     edit_message = db.Column(db.Text)

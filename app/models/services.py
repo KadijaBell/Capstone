@@ -1,5 +1,5 @@
 from .db import db, environment, SCHEMA, add_prefix_for_prod
-from datetime import datetime
+from sqlalchemy.sql import func
 
 
 class Service(db.Model):
@@ -12,7 +12,7 @@ class Service(db.Model):
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.Text, nullable=False)
     agency_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('agency.id')), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=func.now())
 
 
     agency = db.relationship("Agency", back_populates="services")
