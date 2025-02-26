@@ -1,5 +1,5 @@
 from .db import db, environment, SCHEMA, add_prefix_for_prod
-from datetime import datetime
+from sqlalchemy.sql import func
 
 class Message(db.Model):
     __tablename__ = 'messages'
@@ -14,8 +14,8 @@ class Message(db.Model):
     admin_reply = db.Column(db.Text)
     replied_at = db.Column(db.DateTime)
     status = db.Column(db.String(20), default='unread')  # unread, read, archived
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=func.now())
+    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
     parent_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('messages.id')), nullable=True)
     thread_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('messages.id')), nullable=True)
     is_admin_message = db.Column(db.Boolean, default=False)

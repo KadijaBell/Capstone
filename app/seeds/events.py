@@ -1,6 +1,6 @@
 from app.models import db, Event, environment, SCHEMA
 from sqlalchemy.sql import text
-from datetime import datetime
+
 
 
 def seed_events():
@@ -15,8 +15,6 @@ def seed_events():
         agency_id=1,
         client_id=2,
         service_id=1,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
 
     )
 
@@ -31,8 +29,7 @@ def seed_events():
         agency_id=2,
         client_id=3,
         service_id=2,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
+
 
     )
 
@@ -47,8 +44,7 @@ def seed_events():
         agency_id=3,
         client_id=4,
         service_id=3,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
+
 
     )
 
@@ -63,17 +59,17 @@ def seed_events():
         agency_id=3,
         client_id=4,
         service_id=3,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
+
     )
     event4 = Event(
         title=" Awareness Campaign",
         description="A campaign to promote  practices.",
         type="cause",
-        status=EventStatus.CLOSE,
+        status="close",
         client_id=4,
         service_id=3,
-        agency_id=3
+        agency_id=3,
+
     )
 
     db.session.add(event1)
@@ -83,5 +79,8 @@ def seed_events():
     db.session.commit()
 
 def undo_events():
-    db.session.execute('DELETE FROM events')
+    if environment == "production":
+        db.session.execute(f"TRUNCATE table {SCHEMA}.events RESTART IDENTITY CASCADE;")
+    else:
+        db.session.execute(text("DELETE FROM events"))
     db.session.commit()

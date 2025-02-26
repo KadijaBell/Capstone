@@ -10,25 +10,25 @@ def seed_users():
         username='AdminUser',
         email='admin@capstone.com',
         password='secureadminpassword',
-        role=UserRole.ADMIN
+        role="admin"
     )
     demo = User(
         username='Demo',
         email='demo@aa.io',
         password='password',
-        role=UserRole.USER
+        role="user"
     )
     marnie = User(
         username='marnie',
         email='marnie@aa.io',
         password='password',
-        role=UserRole.USER
+        role="user"
     )
     bobbie = User(
         username='bobbie',
         email='bobbie@aa.io',
         password='password',
-        role = UserRole.USER
+        role = "user"
     )
 
     db.session.add(admin)

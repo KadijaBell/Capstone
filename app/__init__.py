@@ -17,7 +17,7 @@ from .seeds import seed_commands
 from .config import Config
 
 def create_app():
-    app = Flask(__name__, static_folder='static', static_url_path='/')
+    app = Flask(__name__, static_folder='../react-vite/dist', static_url_path='/')
 
     # Session configuration
     app.config['SECRET_KEY'] = 'your-secret-key'  # Make sure this is set
