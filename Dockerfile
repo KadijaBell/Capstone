@@ -17,8 +17,7 @@ COPY requirements.txt .
 
 COPY . .
 
-RUN npm install --prefix react-vite
-RUN npm run build --prefix react-vite
+
 RUN pip install -r requirements.txt
 RUN pip install psycopg2
 RUN flask db upgrade
