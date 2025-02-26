@@ -10,9 +10,10 @@ import MessageFilters from '../MessageFunctions/MessageFilters';
 import MessageHandler from '../MessageFunctions/MessageHandler';
 import MessageNotification from '../MessageFunctions/MessageNotifications';
 import MetricCard from '../MetricCard/MetricCard';
-import DashboardEventCard from '../EventCard/DashboardEventCard';
+//import DashboardEventCard from '../EventCard/DashboardEventCard';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import MessageInbox from '../MessageFunctions/MessageInbox';
 
 
 
@@ -39,7 +40,12 @@ function UserDashboard() {
     const [isInboxOpen, setIsInboxOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+    const [showMessageInbox, setShowMessageInbox] = useState(false);
+    //const [selectedThreadMessage, setSelectedThreadMessage] = useState(null);
+    const [showMessageForm, setShowMessageForm] = useState(false);
+    const [messageContent, setMessageContent] = useState('');
     const navigate = useNavigate();
+    const [threadMessages] = useState({});
 
 
 
@@ -78,6 +84,20 @@ function UserDashboard() {
         }
     }, []);
 
+    const fetchMessages = useCallback(async () => {
+        try {
+            const response = await fetch('/api/users/messages', {
+                credentials: 'include'
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setMessages(data.messages || []);
+            }
+        } catch (error) {
+            console.error('Error fetching messages:', error);
+        }
+    }, []);
+
     useEffect(() => {
         if (!user) {
             navigate('/login');
@@ -90,7 +110,8 @@ function UserDashboard() {
         }
 
         fetchUserData();
-    }, [user,navigate, fetchUserData]);
+        fetchMessages();
+    }, [user,navigate, fetchUserData, fetchMessages]);
 
     // Add ESC key handler for modal
     useEffect(() => {
@@ -183,8 +204,7 @@ function UserDashboard() {
                 throw new Error(errorData.error || 'Failed to submit request');
             }
 
-            const data = await response.json();
-            console.log('Success response:', data); // Debug log
+            await response.json();
 
             setShowRequestForm(false);
             await fetchUserData(); // Refresh dashboard data
@@ -204,97 +224,98 @@ function UserDashboard() {
         setSearchTerm(term);
     };
 
-    const handleDeleteMessage = async (messageId) => {
-        if (!window.confirm('Are you sure you want to delete this message?')) {
-            return;
-        }
-
+    const handleMessageDelete = async (messageId) => {
         try {
             const response = await fetch(`/api/users/messages/${messageId}`, {
                 method: 'DELETE',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
+                credentials: 'include'
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to delete message');
-            }
+            if (!response.ok) throw new Error('Failed to delete message');
 
-            // Remove the message from both messages and filtered messages
-            setMessages(prevMessages =>
-                prevMessages.filter(msg => msg.id !== messageId)
-            );
-            setFilteredMessages(prevFiltered =>
-                prevFiltered.filter(msg => msg.id !== messageId)
-            );
-
-            // Show success notification
+            setMessages(prev => prev.filter(msg => msg.id !== messageId));
             setNotification({
                 show: true,
-                message: 'Message deleted successfully'
+                message: 'Message deleted successfully',
+                type: 'success'
             });
-            setTimeout(() => setNotification({ show: false, message: '' }), 3000);
-
         } catch (error) {
             console.error('Error deleting message:', error);
             setNotification({
                 show: true,
-                message: 'Failed to delete message'
+                message: 'Failed to delete message',
+                type: 'error'
             });
-            setTimeout(() => setNotification({ show: false, message: '' }), 3000);
         }
     };
 
-    const handleReplySubmit = async (messageId, replyContent) => {
+    const handleMessageStatusChange = async (messageId, status) => {
         try {
+            const response = await fetch(`/api/users/messages/${messageId}/status`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ status })
+            });
+
+            if (!response.ok) throw new Error('Failed to update message status');
+
+            setMessages(prev =>
+                prev.map(msg =>
+                    msg.id === messageId ? { ...msg, status } : msg
+                )
+            );
+        } catch (error) {
+            console.error('Error updating message status:', error);
+        }
+    };
+
+    const handleReplySubmit = async (messageId, content) => {
+        try {
+            if (!content.trim()) return;
+
             const response = await fetch(`/api/users/messages/${messageId}/reply`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 credentials: 'include',
-                body: JSON.stringify({ message: replyContent })
+                body: JSON.stringify({ content })
             });
 
             if (!response.ok) {
                 throw new Error('Failed to send reply');
             }
 
-            const data = await response.json();
+            await response.json();
 
-            // Update messages with the new reply
-            setMessages(prevMessages => prevMessages.map(msg =>
-                msg.id === messageId
-                    ? { ...msg, replies: [...(msg.replies || []), data.reply] }
-                    : msg
-            ));
+            // Refresh messages and thread messages
+            await fetchMessages();
 
-            // Update filtered messages as well
-            setFilteredMessages(prevFiltered => prevFiltered.map(msg =>
-                msg.id === messageId
-                    ? { ...msg, replies: [...(msg.replies || []), data.reply] }
-                    : msg
-            ));
+            // Fetch updated thread
+            const threadResponse = await fetch(`/api/users/messages/${messageId}/thread`, {
+                credentials: 'include'
+            });
 
-            // Close reply form
-            setShowReplyForm(null);
+            if (threadResponse.ok) {
+                const threadData = await threadResponse.json();
+                threadMessages(threadData.messages);
+            }
 
-            // Show success notification
             setNotification({
                 show: true,
-                message: 'Reply sent successfully'
+                message: 'Reply sent successfully',
+                type: 'success'
             });
-            setTimeout(() => setNotification({ show: false, message: '' }), 3000);
-
         } catch (error) {
             console.error('Error sending reply:', error);
             setNotification({
                 show: true,
-                message: 'Failed to send reply'
+                message: 'Failed to send reply',
+                type: 'error'
             });
-            setTimeout(() => setNotification({ show: false, message: '' }), 3000);
         }
     };
 
@@ -356,28 +377,52 @@ function UserDashboard() {
         }
     };
 
-    const handleMessageAdmin = async (eventId) => {
+    const handleMessageAdmin = async (content) => {
         try {
-            const response = await fetch("/api/messages", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({ event_id: eventId, content: "User requested contact" })
+            const response = await fetch('/api/users/contact-admin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    message: content
+                })
             });
 
-            if (!response.ok) throw new Error("Failed to send message");
+            if (!response.ok) throw new Error('Failed to send message');
+
+            const data = await response.json();
+            setMessages(prev => [...prev, data]);
+            setShowMessageForm(false);
+            setMessageContent('');
             setNotification({
                 show: true,
-                message: "Message sent to admin successfully"
+                message: 'Message sent successfully',
+                type: 'success'
             });
         } catch (error) {
-            console.error("Error:", error);
+            console.error('Error sending message:', error);
             setNotification({
                 show: true,
-                message: "Failed to send message"
+                message: 'Failed to send message',
+                type: 'error'
             });
         }
     };
+
+    // const handleMessageStatusChange = (messageId, newStatus) => {
+    //     setMessages(prevMessages =>
+    //         prevMessages.map(msg =>
+    //             msg.id === messageId ? { ...msg, status: newStatus } : msg
+    //         )
+    //     );
+    //     setFilteredMessages(prevFiltered =>
+    //         prevFiltered.map(msg =>
+    //             msg.id === messageId ? { ...msg, status: newStatus } : msg
+    //         )
+    //     );
+    // };
 
     return (
 
@@ -415,8 +460,23 @@ function UserDashboard() {
         <div className="min-h-screen bg-gradient-to-br from-ivory to-blush dark:from-midnight/90 dark:to-charcoal/90 p-6 pt-20">
             {/* Header Section */}
             <div className="bg-white/80 dark:bg-midnight/80 backdrop-blur-sm rounded-xl shadow-elegant p-6 mb-8">
-                <h1 className="text-3xl font-bold text-midnight dark:text-ivory">User Dashboard</h1>
-                <p className="text-charcoal dark:text-ivory/80 mt-1">Manage Your Events</p>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h1 className="text-3xl font-bold text-midnight dark:text-ivory">User Dashboard</h1>
+                        <p className="text-charcoal dark:text-ivory/80 mt-1">Manage Your Events</p>
+                    </div>
+                    <button
+                        onClick={() => setShowMessageInbox(prev => !prev)}
+                        className="px-4 py-2 bg-gold text-white rounded-lg hover:bg-gold/90"
+                    >
+                        Inbox
+                        {messages.filter(m => m.status === 'unread').length > 0 && (
+                            <span className="ml-2 bg-red-500 text-white rounded-full px-2 py-0.5 text-xs">
+                                {messages.filter(m => m.status === 'unread').length}
+                            </span>
+                        )}
+                    </button>
+                </div>
             </div>
 
             {/* Main Content */}
@@ -516,12 +576,12 @@ function UserDashboard() {
                                             </div>
                                         </div>
 
-                                        <button
-                                            onClick={() => handleMessageAdmin(event.id)}
+                                        {/* <button
+                                            onClick={() => handleMessageAdmin(event.title)}
                                             className="px-6 py-2 bg-gold hover:bg-gold/90 text-white rounded-md transition-colors"
                                         >
                                             Message Admin
-                                        </button>
+                                        </button> */}
                                     </div>
                                 </div>
                             ))}
@@ -585,7 +645,7 @@ function UserDashboard() {
                                                         created_at: message.replied_at
                                                     }] : []}
                                                     onReply={(messageId) => setShowReplyForm(messageId)}
-                                                    onDelete={handleDeleteMessage}
+                                                    onDelete={handleMessageDelete}
                                                 />
                                             ))
                                         )}
@@ -665,6 +725,65 @@ function UserDashboard() {
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Add Message Inbox */}
+            <AnimatePresence>
+                {showMessageInbox && (
+                    <motion.div
+                        initial={{ opacity: 0, x: 100 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 100 }}
+                        className="fixed inset-y-0 right-0 w-full sm:w-[480px] bg-white dark:bg-midnight shadow-xl z-50"
+                    >
+                        <MessageInbox
+                            messages={messages}
+                            isAdmin={false}
+                            onClose={() => setShowMessageInbox(false)}
+                            onNewMessage={() => setShowMessageForm(true)}
+                            onMessageDelete={handleMessageDelete}
+                            onMessageStatusChange={handleMessageStatusChange}
+                            onMessageReply={handleReplySubmit}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Message Form Modal */}
+            {showMessageForm && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+                    >
+                        <h3 className="text-xl font-bold mb-4">Message Admin</h3>
+                        <textarea
+                            value={messageContent}
+                            onChange={(e) => setMessageContent(e.target.value)}
+                            placeholder="Write your message..."
+                            className="w-full p-4 border rounded-lg mb-4 min-h-[120px]"
+                        />
+                        <div className="flex justify-end gap-4">
+                            <button
+                                onClick={() => {
+                                    setShowMessageForm(false);
+                                    setMessageContent('');
+                                }}
+                                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => handleMessageAdmin(messageContent)}
+                                disabled={!messageContent.trim()}
+                                className="px-4 py-2 bg-gold text-white rounded hover:bg-gold/90 disabled:opacity-50"
+                            >
+                                Send Message
+                            </button>
+                        </div>
+                    </motion.div>
                 </div>
             )}
         </div>

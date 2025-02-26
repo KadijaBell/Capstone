@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import LoginFormPage from "../pages/LoginFormPage";
 import SignupFormPage from "../pages/SignupFormPage";
-import HomePage from "../components/HomePage/HomePage";
+//import HomePage from "../components/HomePage/HomePage";
 import Layout from "./Layout";
 import AgencyPage from "../components/AgencyPage";
 import Insights from "../components/Insights";
@@ -9,12 +9,12 @@ import AboutUsPage from "../pages/AboutUsPage";
 import EventsPage from "../pages/Events/EventsPage";
 import EventDetailsPage from "../pages/Events/EventDetailsPage";
 import InsightsPage from "../pages/InsightsPage";
-import LandingPage from "../pages/LandingPage";
+//import LandingPage from "../pages/LandingPage";
 import UserDashboardPage from "../components/UserDashboard/UserDashboard";
 import AdminDashboardPage from "../components/AdminDashboard/AdminDashboard";
-
-
-
+import HomePage from "../pages/HomePage";
+import CommunityPage from "../pages/CommunityPage";
+import AgencyMainPage from "../pages/AgencyMainPage";
 
 export const router = createBrowserRouter([
   {
@@ -22,13 +22,8 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <HomePage />,
-      },
-
-      {
-        path: "/landingpage",
-        element: <LandingPage />,
-        // element: <LandingPageHeroSection />
+        // element: <HomePage />,
+        element: <HomePage />
       },
       {
         path: "/agency-page",
@@ -56,19 +51,19 @@ export const router = createBrowserRouter([
       },
       {
         path: "/public",
+        element: <CommunityPage />,
+      },
+      {
+        path: "/events",
         element: <EventsPage />,
       },
-      // {
-      //   path: "/events",
-      //   element: <EventsPage />,
-      // },
       {
         path: "/events/:id",
         element: <EventDetailsPage />,
       },
       {
-        path: "/agencies",
-        element: <AgencyPage />,
+        path: "/agency",
+        element: <AgencyMainPage />,
       },
       {
         path: "/metrics",

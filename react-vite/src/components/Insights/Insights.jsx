@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
-import PixelCard from "../PixelCard/PixelCard";
+//import PixelCard from "../PixelCard/PixelCard";
 
 const images = [
   "/assets/capstone-image-1.jpg",
@@ -14,10 +14,30 @@ const images = [
 ];
 
 const metrics = [
-  { value: "12K+", title: "Metric Title 1" },
-  { value: "50+", title: "Metric Title 2" },
-  { value: "100%", title: "Metric Title 3" },
-  { value: "5K+", title: "Metric Title 4" },
+  {
+    value: "25+",
+    title: "Years Experience",
+    description: "Combined entertainment industry expertise",
+    color: "from-gold via-blush to-gold"
+  },
+  {
+    value: "50K+",
+    title: "Community Reach",
+    description: "Active engagement across platforms",
+    color: "from-mint via-gold to-mint"
+  },
+  {
+    value: "100%",
+    title: "Data Accuracy",
+    description: "Precision in analytics and reporting",
+    color: "from-blush via-mint to-blush"
+  },
+  {
+    value: "3x",
+    title: "Growth Rate",
+    description: "Average client platform expansion",
+    color: "from-gold via-mint to-blush"
+  }
 ];
 
 const Insights = () => {
@@ -49,144 +69,128 @@ const Insights = () => {
     exit: { opacity: 0, y: -40, transition: { duration: 1, ease: "easeIn" } },
   };
 
-  const paragraphVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 1, ease: "easeOut", delay: 0.3 },
-    },
-    exit: { opacity: 0, y: -20, transition: { duration: 1, ease: "easeIn" } },
-  };
+  // const paragraphVariants = {
+  //   hidden: { opacity: 0, y: 20 },
+  //   visible: {
+  //     opacity: 1,
+  //     y: 0,
+  //     transition: { duration: 1, ease: "easeOut", delay: 0.3 },
+  //   },
+  //   exit: { opacity: 0, y: -20, transition: { duration: 1, ease: "easeIn" } },
+  // };
 
   return (
     <section id="insights" className="relative overflow-hidden min-h-screen">
       {/* Foreground content */}
       <motion.div
-        className="relative z-10 py-24 bg-charcoal text-ivory"
+        className="relative z-10 py-24 bg-charcoal/95 backdrop-blur-sm"
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 1 }}
         viewport={{ once: true }}
       >
         <div className="max-w-7xl mx-auto px-5 sm:px-10 md:px-12 lg:px-5 space-y-16 flex flex-col items-center">
-          {/* Text Container with fixed height */}
-          <div
-            className="space-y-6 max-w-xl text-center"
-            style={{ minHeight: "220px" }}
-          >
-            {/* AnimatePresence ensures exit completes before next element enters */}
+          {/* Enhanced Text Container */}
+          <div className="space-y-6 max-w-3xl mx-auto text-center">
+            <motion.h2
+              variants={headingVariants}
+              initial="hidden"
+              animate="visible"
+              className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gold via-mint to-blush bg-clip-text text-transparent mb-8"
+            >
+              WHAT WE DELIVER
+            </motion.h2>
+
             <AnimatePresence mode="wait">
-              {!showData && (
-                <motion.h1
-                  key="deliver-heading"
-                  className="text-3xl font-bold text-ivory capitalize"
-                  variants={headingVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  whileHover={{ scale: 1.1, translateZ: 20 }}
+              {!showData ? (
+                <motion.div
+                  key="services"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.5 }}
+                  className="space-y-6"
                 >
-                  WHAT WE DELIVER
-                </motion.h1>
-              )}
-              {showData && (
-                <motion.h1
-                  key="data-heading"
-                  className="text-3xl font-bold text-ivory capitalize"
-                  variants={headingVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  whileHover={{ scale: 1.1, translateZ: 20 }}
+                  <p className="text-lg text-ivory/90 leading-relaxed">
+                    Our comprehensive service suite focuses on three key areas:
+                  </p>
+                  <div className="grid md:grid-cols-3 gap-6 text-left">
+                    <div className="p-4 bg-midnight/50 rounded-lg border border-gold/10">
+                      <h3 className="text-gold font-semibold mb-2">Portfolio Creation</h3>
+                      <p className="text-ivory/70 text-sm">Artist profiles, company branding, and influencer portfolio development</p>
+                    </div>
+                    <div className="p-4 bg-midnight/50 rounded-lg border border-gold/10">
+                      <h3 className="text-mint font-semibold mb-2">Community Impact</h3>
+                      <p className="text-ivory/70 text-sm">Strategic activation and relationship building in entertainment</p>
+                    </div>
+                    <div className="p-4 bg-midnight/50 rounded-lg border border-gold/10">
+                      <h3 className="text-blush font-semibold mb-2">Data Collection</h3>
+                      <p className="text-ivory/70 text-sm">Comprehensive analytics for consumer engagement and activity</p>
+                    </div>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="data-initiative"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.5 }}
+                  className="space-y-6"
                 >
-                  DATA
-                </motion.h1>
-              )}
-            </AnimatePresence>
-            <AnimatePresence mode="wait">
-              {!showData && (
-                <motion.p
-                  key="deliver-para"
-                  className="text-blush dark:text-gray-300"
-                  variants={paragraphVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                >
-                  Based around our three targets of focus, our services will be
-                  as follows: portfolio creation for artist profile and company,
-                  influencer portfolio, event concept creation, activation,
-                  community impact strategies for endemic and non-endemic
-                  relationships in entertainment, and data collection around all
-                  of these properties to curate an accurate account of consumer
-                  engagement, needs, activity, and interests based on our
-                  projects.
-                </motion.p>
-              )}
-              {showData && (
-                <motion.p
-                  key="data-para"
-                  className="text-blush dark:text-gray-300"
-                  variants={paragraphVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                >
-                  Through a new developing partnership with Billboard Magazine,
-                  we will be beginning a new conversation about how we approach
-                  data collection in communities, with a focus on video games.
-                  We’re excited to campaign to add Video Gaming to Billboard
-                  charts, among introducing new ways to collect data at live
-                  events.
-                </motion.p>
+                  <p className="text-lg text-ivory/90 leading-relaxed">
+                    Through our groundbreaking partnership with Billboard Magazine,
+                    we&apos;re revolutionizing data collection in gaming communities.
+                    Our initiative aims to establish Video Gaming as a recognized
+                    category on Billboard charts, while introducing innovative
+                    methods for live event data collection.
+                  </p>
+                  <div className="inline-block px-6 py-2 bg-gold/10 rounded-full">
+                    <span className="text-gold text-sm font-medium">
+                      Pioneering the future of entertainment metrics
+                    </span>
+                  </div>
+                </motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          {/* Metrics Section with Pixel Card Effect */}
+          {/* Enhanced Metrics Section */}
           <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-6 lg:gap-10"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
             variants={{
               hidden: { opacity: 0 },
               visible: { opacity: 1, transition: { staggerChildren: 0.2 } },
             }}
           >
             {metrics.map((metric, index) => (
-              <PixelCard
+              <motion.div
                 key={index}
-                variant="yellow" // or "blue", "yellow", "pink", etc.
-                // Pass the original card styles so the content looks exactly as before
-                className="relative p-4 bg-gray-200/30 rounded-md h-36 w-[110%] flex flex-col justify-center items-center text-center overflow-hidden group"
-                gap={4.7}
-                speed={50}
+                className="relative group"
+                whileHover={{ scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300 }}
               >
                 <motion.div
-                  variants={{
-                    hidden: { opacity: 0, y: 30 },
-                    visible: {
-                      opacity: 1,
-                      y: 0,
-                      transition: { duration: 0.8 },
-                    },
-                  }}
-                  whileHover={{ scale: 1.1, translateZ: 20 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 10 }}
-                >
-                  <span className="block font-semibold text-2xl text-mint dark:text-mint">
+                  className={`absolute -inset-0.5 bg-gradient-to-r ${metric.color} rounded-xl blur opacity-50 group-hover:opacity-100 transition duration-300`}
+                />
+                <div className="relative bg-midnight/80 backdrop-blur-sm p-6 rounded-xl border border-gold/20">
+                  <motion.span
+                    className={`block font-bold text-4xl bg-gradient-to-r ${metric.color} bg-clip-text text-transparent mb-2`}
+                    animate={{
+                      backgroundPosition: ["0%", "100%"],
+                    }}
+                    transition={{ duration: 5, repeat: Infinity }}
+                  >
                     {metric.value}
-                  </span>
-                  <h2 className="mt-1 font-medium text-gray-800 dark:text-black-900">
+                  </motion.span>
+                  <h3 className="text-xl font-display text-ivory/90 mb-2">
                     {metric.title}
-                  </h2>
-                  <p className="mt-1 text-700 text-sm text-gray-800 dark:text-black-900">
-                    Lorem ipsum dolor sit amet.
+                  </h3>
+                  <p className="text-sm text-ivory/70">
+                    {metric.description}
                   </p>
-                </motion.div>
-              </PixelCard>
+                </div>
+              </motion.div>
             ))}
           </motion.div>
 
