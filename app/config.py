@@ -18,16 +18,16 @@ class Config:
     # get(
     #     'DATABASE_URL').replace
     #     ('postgres://', 'postgresql://')
-    
+
     # Get the environment
-    ENVIRONMENT = os.environ.get("FLASK_ENV", "development")
+    # ENVIRONMENT = os.environ.get("FLASK_ENV", "development")
 
     # Set the database URL based on environment
-    if ENVIRONMENT == "production":
-        # Handle production database URL
-        SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL').replace('postgres://', 'postgresql://')
-    else:
+    # if ENVIRONMENT == "production":
+    #     # Handle production database URL
+    #     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL').replace('postgres://', 'postgresql://')
+    # else:
         # Use SQLite for development
-        SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///dev.db')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL').replace('postgres://', 'postgresql://')
 
     SQLALCHEMY_ECHO = True
